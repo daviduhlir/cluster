@@ -14,7 +14,7 @@ export const forkDefaultConfig = {
     PING_MAX_TIME: 1000,
 };
 
-export class TransferForkHandler extends TransferIPCLayer {
+export class TransferForkLayer extends TransferIPCLayer {
     protected living: boolean = true;
     protected pingInterval: any = null;
 

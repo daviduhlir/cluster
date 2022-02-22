@@ -1,5 +1,5 @@
 import * as cluster from 'cluster';
-import { TransferForkHandler } from './TransferForkHandler';
+import { TransferForkLayer } from './TransferForkLayer';
 import { AsObject, TransferIPCLayer } from './TransferIPCLayer';
 import { v1 as uuidv1 } from 'uuid';
 import { TransferRxAdapter } from './TransferRxAdapter';
@@ -12,7 +12,7 @@ export interface ForkInitializator {
 
 export class Worker<TParams = any, TWorker = any> {
     protected id: string;
-    protected forkHandler: TransferForkHandler;
+    protected forkHandler: TransferForkLayer;
     protected masterHandler: TransferIPCLayer;
     protected TransferRxAdapter: TransferRxAdapter;
 
@@ -26,7 +26,7 @@ export class Worker<TParams = any, TWorker = any> {
     private async init() {
         if (cluster.isMaster) {
             this.id = uuidv1();
-            this.forkHandler = new TransferForkHandler({ _fork_id: this.id });
+            this.forkHandler = new TransferForkLayer({ _fork_id: this.id });
             this.TransferRxAdapter = new TransferRxAdapter(this, this.forkHandler);
             if ((await this.forkHandler.as<any>().initWorker(this.id, this.params)) !== SUCCESS_INIT_FLAG) {
                 throw new Error('Worker not found in any cluster.')
@@ -43,8 +43,8 @@ export class Worker<TParams = any, TWorker = any> {
                             await this.initWorker(params, this.masterHandler.as<any>()),
                             this.masterHandler,
                         );
+                        return SUCCESS_INIT_FLAG;
                     }
-                    return SUCCESS_INIT_FLAG;
                 },
             }, this.masterHandler);
         }

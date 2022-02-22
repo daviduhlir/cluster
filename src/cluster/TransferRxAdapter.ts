@@ -1,4 +1,5 @@
-import { TransferIPCLayer } from './TransferIPCLayer';
+import { IPCTransferMessage, TransferIPCLayer } from './TransferIPCLayer';
+import { extractFilename, filterFiles } from './utils/stackTrace';
 
 /**
  * Error when method on receiver was not found
@@ -6,6 +7,22 @@ import { TransferIPCLayer } from './TransferIPCLayer';
 export class MethodNotFound extends Error {
     constructor(message?: string) {
         super(message);
+
+        // restore prototype chain
+        const actualProto = new.target.prototype;
+
+        if (Object.setPrototypeOf) {
+            Object.setPrototypeOf(this, actualProto);
+        } else {
+            (this as any).__proto__ = actualProto;
+        }
+    }
+}
+
+export class TrasferedError extends Error {
+    constructor(public readonly original: Error, fileNames: string[]) {
+        super(original.message);
+        this.stack = filterFiles(original.stack, fileNames);
 
         // restore prototype chain
         const actualProto = new.target.prototype;
@@ -43,16 +60,21 @@ export class TransferRxAdapter {
     /**
      * Handle incoming message.
      */
-    protected clusterHandleMessage = async (message): Promise<Object> => {
+    protected clusterHandleMessage = async (message: IPCTransferMessage, parentFiles: string[]): Promise<Object> => {
         if (message.type === 'rpcCall' && message.args && message.method) {
             // no root? nothing to do
             if (!this.receiver) {
-                throw 'Receiver is not set';
+                throw new Error('Receiver is not set');
             }
             if (!this.receiver[message.method]) {
-                throw new MethodNotFound();
+                throw new MethodNotFound(`Method ${message.method} was not found in rxAdapter.`);
             }
-            return this.receiver[message.method].apply(this.receiver, message.args);
+            try {
+                return await this.receiver[message.method].apply(this.receiver, message.args);
+            } catch(e) {
+                const file = extractFilename(Error().stack);
+                throw new TrasferedError(e, [file].concat(parentFiles));
+            }
         }
     };
 }

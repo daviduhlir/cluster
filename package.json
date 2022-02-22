@@ -6,13 +6,15 @@
   "types": "build/index.d.ts",
   "scripts": {
     "build": "rimraf ./build && tsc",
-    "start": "npm run build && node ./build/index.js"
+    "start": "npm run build && node --enable-source-maps --experimental-import-meta-resolve ./build/index.js",
+    "inspect": "npm run build && node --enable-source-maps --inspect ./build/index.js"
   },
   "author": "David Uhlíř",
   "license": "ISC",
   "dependencies": {
     "@types/npm": "^2.0.29",
     "rimraf": "^2.6.2",
+    "stacktrace-parser": "^0.1.10",
     "typescript": "^3.8.3",
     "uuid": "^3.2.1",
     "websocket": "^1.0.31"

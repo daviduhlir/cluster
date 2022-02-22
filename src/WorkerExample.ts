@@ -21,12 +21,12 @@ export class WorkerExampleFork {
 
 // master worker
 export class WorkerExample extends Worker<Params, WorkerExampleFork> {
-    constructor(public readonly tt: any, params: Params) {
+    constructor(params: Params) {
         super(params);
     }
 
     public async sayHello() {
-        this.tt.hello();
+        console.log(await this.fork.pong());
     }
 
     protected async initWorker(params: Params, master: any) {
