@@ -1,5 +1,5 @@
 import * as cluster from 'cluster';
-import { TransferForkLayer } from './TransferForkLayer';
+import { ForkConfig, TransferForkLayer } from './TransferForkLayer';
 import { AsObject, TransferIPCLayer } from './TransferIPCLayer';
 import { v1 as uuidv1 } from 'uuid';
 import { TransferRxAdapter } from './TransferRxAdapter';
@@ -16,7 +16,7 @@ export class Worker<TParams = any, TWorker = any> {
     protected masterHandler: TransferIPCLayer;
     protected TransferRxAdapter: TransferRxAdapter;
 
-    constructor(public readonly params: TParams) {
+    constructor(public readonly params: TParams, public readonly forkHandlerConfig?: ForkConfig) {
         this.init();
     }
 
@@ -27,7 +27,7 @@ export class Worker<TParams = any, TWorker = any> {
         if (cluster.isMaster) {
             // generate id for pair with fork
             this.id = uuidv1();
-            this.forkHandler = new TransferForkLayer({ _fork_id: this.id });
+            this.forkHandler = new TransferForkLayer({ _fork_id: this.id }, this.forkHandlerConfig);
             this.TransferRxAdapter = new TransferRxAdapter(this, this.forkHandler);
 
             // send init worker
