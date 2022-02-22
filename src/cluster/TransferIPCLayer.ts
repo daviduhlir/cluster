@@ -178,6 +178,7 @@ export class TransferIPCLayer {
         return new Proxy(this as any, {
             get: (target, propKey, receiver) => {
                 return (...args) => {
+                    // call message and include call stack to be presented when error occured
                     return this.call(propKey as string, args, filterFiles(Error().stack));
                 };
             }
