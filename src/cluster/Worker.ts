@@ -25,9 +25,12 @@ export class Worker<TParams = any, TWorker = any> {
      */
     private async init() {
         if (cluster.isMaster) {
+            // generate id for pair with fork
             this.id = uuidv1();
             this.forkHandler = new TransferForkLayer({ _fork_id: this.id });
             this.TransferRxAdapter = new TransferRxAdapter(this, this.forkHandler);
+
+            // send init worker
             if ((await this.forkHandler.as<any>().initWorker(this.id, this.params)) !== SUCCESS_INIT_FLAG) {
                 throw new Error('Worker not found in any cluster.')
             }
@@ -39,6 +42,7 @@ export class Worker<TParams = any, TWorker = any> {
                     if (id === process.env._fork_id) {
                         // reinit TransferRxAdapter
                         this.TransferRxAdapter.destroy();
+                        // create adapter to only receive initWorker on this fork
                         this.TransferRxAdapter = new TransferRxAdapter(
                             await this.initWorker(params, this.masterHandler.as<any>()),
                             this.masterHandler,

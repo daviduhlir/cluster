@@ -20,9 +20,10 @@ export class MethodNotFound extends Error {
 }
 
 export class TrasferedError extends Error {
-    constructor(public readonly original: Error, fileNames: string[]) {
+    constructor(public readonly original: Error) {
         super(original.message);
-        this.stack = filterFiles(original.stack, fileNames);
+        const file = extractFilename(Error().stack);
+        this.stack = filterFiles(original.stack, [file]);
 
         // restore prototype chain
         const actualProto = new.target.prototype;
@@ -60,20 +61,20 @@ export class TransferRxAdapter {
     /**
      * Handle incoming message.
      */
-    protected clusterHandleMessage = async (message: IPCTransferMessage, parentFiles: string[]): Promise<Object> => {
+    protected clusterHandleMessage = async (message: IPCTransferMessage): Promise<Object> => {
         if (message.type === 'rpcCall' && message.args && message.method) {
             // no root? nothing to do
             if (!this.receiver) {
                 throw new Error('Receiver is not set');
             }
             if (!this.receiver[message.method]) {
-                throw new MethodNotFound(`Method ${message.method} was not found in rxAdapter.`);
+                throw new TrasferedError(new MethodNotFound(`Method ${message.method} was not found on receiver.`));
             }
             try {
                 return await this.receiver[message.method].apply(this.receiver, message.args);
             } catch(e) {
                 const file = extractFilename(Error().stack);
-                throw new TrasferedError(e, [file].concat(parentFiles));
+                throw new TrasferedError(e);
             }
         }
     };

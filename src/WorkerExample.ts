@@ -15,6 +15,7 @@ export class WorkerExampleFork {
     }
 
     public pong() {
+        // throw new Error('Something');
         return [this.params.name, Date.now()];
     }
 }
@@ -27,6 +28,7 @@ export class WorkerExample extends Worker<Params, WorkerExampleFork> {
 
     public async sayHello() {
         console.log(await this.fork.pong());
+        // console.log(await (this.fork as any).ttt());
     }
 
     protected async initWorker(params: Params, master: any) {
