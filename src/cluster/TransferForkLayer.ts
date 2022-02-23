@@ -40,7 +40,8 @@ export class TransferForkLayer extends TransferIPCLayer {
             this.pingInterval = null;
         }
         this.living = false;
-        (this.worker as cluster.Worker).process.kill('SIGKILL');
+        (this.worker as cluster.Worker)?.process.kill('SIGKILL');
+        this.setWorker(null);
     }
 
     /**
@@ -48,7 +49,8 @@ export class TransferForkLayer extends TransferIPCLayer {
      */
     public restart() {
         console.log(`Fork force restart`);
-        (this.worker as cluster.Worker).process.kill('SIGKILL');
+        (this.worker as cluster.Worker)?.process.kill('SIGKILL');
+        this.setWorker(null);
     }
 
     /**
@@ -96,15 +98,17 @@ export class TransferForkLayer extends TransferIPCLayer {
     protected setWorker(worker) {
         super.setWorker(worker);
 
-        // restart fork if my fork is died
-        worker.on('exit', (code, signal) => {
-            if (this.living) {
-                console.error(`Fork died with code ${code}, will be restarted`);
-                this.setWorker(cluster.fork(this.args));
-                this.resetPing();
-            } else {
-                console.error(`Fork died with code ${code}.`);
-            }
-        });
+        if (worker) {
+            // restart fork if my fork is died
+            worker.on('exit', (code, signal) => {
+                if (this.living) {
+                    console.error(`Fork died with code ${code}, will be restarted`);
+                    this.setWorker(cluster.fork(this.args));
+                    this.resetPing();
+                } else {
+                    console.error(`Fork died with code ${code}.`);
+                }
+            });
+        }
     }
 }

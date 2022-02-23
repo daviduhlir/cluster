@@ -10,9 +10,7 @@ export class WorkerExampleFork {
     constructor(
         public readonly params: Params,
         public readonly master: AsObject<WorkerExample>,
-    ) {
-        master.sayHello();
-    }
+    ) {}
 
     public pong() {
         // throw new Error('Something');
@@ -26,9 +24,8 @@ export class WorkerExample extends Worker<Params, WorkerExampleFork> {
         super(params);
     }
 
-    public async sayHello() {
-        console.log(await this.fork.pong());
-        // console.log(await (this.fork as any).ttt());
+    public async workerMounted() {
+        setInterval(async () => console.log(await this.fork.pong()), 1000);
     }
 
     protected async initWorker(params: Params, master: any) {

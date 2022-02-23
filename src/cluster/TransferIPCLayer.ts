@@ -1,4 +1,5 @@
 import { Worker } from 'cluster';
+import { EventEmitter } from 'events';
 import { v1 as uuidv1 } from 'uuid';
 import { extractFilename, filterFiles } from './utils/stackTrace';
 
@@ -26,6 +27,22 @@ export class MessageResultError extends Error {
     }
 }
 
+export class MessageTransferRejected extends Error {
+    constructor(message: string, stack: string, originalStack?: string) {
+        super(message);
+        this.stack = `Error: ${message}\n${stack}`;
+
+        // restore prototype chain
+        const actualProto = new.target.prototype;
+
+        if (Object.setPrototypeOf) {
+            Object.setPrototypeOf(this, actualProto);
+        } else {
+            (this as any).__proto__ = actualProto;
+        }
+    }
+}
+
 export interface IPCTransferMessage {
     id?: string;
     type: 'rpcCall';
@@ -34,10 +51,12 @@ export interface IPCTransferMessage {
     stackTrace: string;
 }
 
+export const EVENT_WORKER_CHANGED = 'EVENT_WORKER_CHANGED';
+
 /**
  * Ipc transfer layer
  */
-export class TransferIPCLayer {
+export class TransferIPCLayer extends EventEmitter {
     protected static IPC_MESSAGE_HEADER = '__transferLayerInternalMessage';
     protected attachedWorker: Worker | NodeJS.Process = null;
     protected rxConsumers: RxConsumer[] = [];
@@ -45,6 +64,7 @@ export class TransferIPCLayer {
     constructor(
         worker,
     ) {
+        super();
         this.setWorker(worker);
     }
 
@@ -60,15 +80,22 @@ export class TransferIPCLayer {
      * @param worker
      */
     protected setWorker(worker) {
-        this.attachedWorker = worker;
-        this.attachedWorker.removeAllListeners('message');
-        this.attachedWorker.addListener('message', this.handleIncommingMessage);
+        let wasAlreadySet = !!this.attachedWorker;
+        if (worker) {
+            this.attachedWorker = worker;
+            this.attachedWorker.removeAllListeners('message');
+            this.attachedWorker.addListener('message', this.handleIncommingMessage);
+        }
+        this.emit(EVENT_WORKER_CHANGED, wasAlreadySet);
     }
 
     /**
      * Send message
      */
-    public send(message: IPCTransferMessage): Promise<any> {
+    public send(messageToSend: IPCTransferMessage): Promise<any> {
+        if (!this.worker) {
+            return Promise.reject(new MessageTransferRejected(`Call was rejected, worker is not exists anymore.`, messageToSend.stackTrace))
+        }
         return new Promise((resolve, reject) => {
             const id = uuidv1();
 
@@ -79,6 +106,7 @@ export class TransferIPCLayer {
                     message.hasOwnProperty(TransferIPCLayer.IPC_MESSAGE_HEADER) &&
                     message.id === id
                 ) {
+                    this.removeListener(EVENT_WORKER_CHANGED, rejectHandler);
                     this.worker.removeListener('message', messageHandler);
 
                     // if there was error, just send transfered error
@@ -89,11 +117,18 @@ export class TransferIPCLayer {
                     }
                 }
             };
+            const rejectHandler = (message) => {
+                this.removeListener(EVENT_WORKER_CHANGED, rejectHandler);
+                this.worker.removeListener('message', messageHandler);
+                reject(new MessageTransferRejected(`Call was rejected, due to worker was chenged.`, messageToSend.stackTrace));
+            };
+
             this.worker.addListener('message', messageHandler);
+            this.addListener(EVENT_WORKER_CHANGED, rejectHandler);
 
             this.worker.send({
                 [TransferIPCLayer.IPC_MESSAGE_HEADER]: true,
-                ...message,
+                ...messageToSend,
                 id,
             });
         });
