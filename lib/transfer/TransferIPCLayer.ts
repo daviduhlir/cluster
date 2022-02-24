@@ -1,7 +1,8 @@
 import { Worker } from 'cluster';
 import { EventEmitter } from 'events';
 import { v1 as uuidv1 } from 'uuid';
-import { extractFilename, filterFiles } from './utils/stackTrace';
+import { MessageResultError, MessageTransferRejected } from '../utils/Errors';
+import { extractFilename, filterFiles } from '../utils/stackTrace';
 
 export type RxConsumer = (message: any) => Promise<Object>;
 export type ArgumentTypes<T> = T extends (... args: infer U ) => infer R ? U: never;
@@ -9,38 +10,6 @@ export type ThenArg<T> = T extends PromiseLike<infer U> ? U : T
 export type AsObject<T> = {
     [K in keyof T]: (...a: ArgumentTypes<T[K]>) =>
         T[K] extends (...args: any) => Promise<any> ? (T[K]) : T[K] extends (...args: any) => any ? (Promise<ReturnType<T[K]>>) : never
-}
-
-export class MessageResultError extends Error {
-    constructor(message: string, stack: string, originalStack?: string) {
-        super(message);
-        this.stack = `Error: ${message}\n${stack}`;
-
-        // restore prototype chain
-        const actualProto = new.target.prototype;
-
-        if (Object.setPrototypeOf) {
-            Object.setPrototypeOf(this, actualProto);
-        } else {
-            (this as any).__proto__ = actualProto;
-        }
-    }
-}
-
-export class MessageTransferRejected extends Error {
-    constructor(message: string, stack: string, originalStack?: string) {
-        super(message);
-        this.stack = `Error: ${message}\n${stack}`;
-
-        // restore prototype chain
-        const actualProto = new.target.prototype;
-
-        if (Object.setPrototypeOf) {
-            Object.setPrototypeOf(this, actualProto);
-        } else {
-            (this as any).__proto__ = actualProto;
-        }
-    }
 }
 
 export interface IPCTransferMessage {

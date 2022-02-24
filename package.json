@@ -2,12 +2,10 @@
   "name": "@david.uhlir/cluster",
   "version": "1.0.1",
   "description": "Cluster",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf ./build && tsc",
-    "start": "npm run build && node --enable-source-maps --experimental-import-meta-resolve ./build/index.js",
-    "inspect": "npm run build && node --enable-source-maps --inspect ./build/index.js"
+    "build": "rimraf ./dist && tsc"
   },
   "author": "David Uhlíř",
   "license": "ISC",

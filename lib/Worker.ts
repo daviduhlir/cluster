@@ -1,8 +1,8 @@
 import * as cluster from 'cluster';
-import { ForkConfig, TransferForkLayer } from './TransferForkLayer';
-import { AsObject, EVENT_WORKER_CHANGED, TransferIPCLayer } from './TransferIPCLayer';
+import { ForkConfig, TransferForkLayer } from './transfer/TransferForkLayer';
+import { AsObject, EVENT_WORKER_CHANGED, TransferIPCLayer } from './transfer/TransferIPCLayer';
 import { v1 as uuidv1 } from 'uuid';
-import { TransferRxAdapter } from './TransferRxAdapter';
+import { TransferRxAdapter } from './transfer/TransferRxAdapter';
 
 export const SUCCESS_INIT_FLAG = 'SUCCESS_INIT_FLAG';
 

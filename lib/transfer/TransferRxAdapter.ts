@@ -1,40 +1,6 @@
 import { IPCTransferMessage, TransferIPCLayer } from './TransferIPCLayer';
-import { extractFilename, filterFiles } from './utils/stackTrace';
-
-/**
- * Error when method on receiver was not found
- */
-export class MethodNotFound extends Error {
-    constructor(message?: string) {
-        super(message);
-
-        // restore prototype chain
-        const actualProto = new.target.prototype;
-
-        if (Object.setPrototypeOf) {
-            Object.setPrototypeOf(this, actualProto);
-        } else {
-            (this as any).__proto__ = actualProto;
-        }
-    }
-}
-
-export class TrasferedError extends Error {
-    constructor(public readonly original: Error) {
-        super(original.message);
-        const file = extractFilename(Error().stack);
-        this.stack = filterFiles(original.stack, [file]);
-
-        // restore prototype chain
-        const actualProto = new.target.prototype;
-
-        if (Object.setPrototypeOf) {
-            Object.setPrototypeOf(this, actualProto);
-        } else {
-            (this as any).__proto__ = actualProto;
-        }
-    }
-}
+import { MethodNotFound, TrasferedError } from '../utils/Errors';
+import { extractFilename, filterFiles } from '../utils/stackTrace';
 
 /**
  * Receiver class is for object, where can be called methods remotly.
@@ -68,13 +34,14 @@ export class TransferRxAdapter {
                 throw new Error('Receiver is not set');
             }
             if (!this.receiver[message.method]) {
-                throw new TrasferedError(new MethodNotFound(`Method ${message.method} was not found on receiver.`));
+                const file = extractFilename(Error().stack);
+                throw new TrasferedError(new MethodNotFound(`Method ${message.method} was not found on receiver.`), [file]);
             }
             try {
                 return await this.receiver[message.method].apply(this.receiver, message.args);
             } catch(e) {
                 const file = extractFilename(Error().stack);
-                throw new TrasferedError(e);
+                throw new TrasferedError(e, [file]);
             }
         }
     };

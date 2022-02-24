@@ -1,5 +1,8 @@
 import * as stackTraceParser from 'stacktrace-parser';
 
+/**
+ * Filter files from stack trace
+ */
 export function filterFiles(stack: string, filterFileNames?: string[]) {
     const parts = stackTraceParser.parse(stack);
     let fileNames = filterFileNames ? filterFileNames : [parts[0].file];
@@ -9,7 +12,9 @@ export function filterFiles(stack: string, filterFileNames?: string[]) {
         .join('\n')
 }
 
-
+/**
+ * Get real filename
+ */
 export function extractFilename(stack: string) {
     const parts = stackTraceParser.parse(stack);
     return parts[0].file;
