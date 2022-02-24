@@ -8,7 +8,7 @@
     "start": "npm run build && node --enable-source-maps ./build/index.js",
     "inspect": "npm run build && node --enable-source-maps --inspect ./build/index.js"
   },
-  "author": "",
+  "author": "David Uhlíř",
   "license": "ISC",
   "dependencies": {
     "@david.uhlir/cluster": "file:..",
