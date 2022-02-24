@@ -7,6 +7,10 @@
   "scripts": {
     "build": "rimraf ./dist && tsc"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daviduhlir/cluster.git"
+  },
   "author": "David Uhlíř",
   "license": "ISC",
   "dependencies": {
@@ -14,8 +18,7 @@
     "rimraf": "^2.6.2",
     "stacktrace-parser": "^0.1.10",
     "typescript": "^3.8.3",
-    "uuid": "^3.2.1",
-    "websocket": "^1.0.31"
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "@types/node": "^13.11.1"
