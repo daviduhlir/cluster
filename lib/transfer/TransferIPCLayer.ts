@@ -1,7 +1,7 @@
 import { Worker } from 'cluster';
 import { EventEmitter } from 'events';
 import { v1 as uuidv1 } from 'uuid';
-import { MessageResultError, MessageTransferRejected } from '../utils/Errors';
+import { MessageResultError, MessageTransferRejected } from '../utils/rrors';
 import { extractFilename, filterFiles } from '../utils/stackTrace';
 
 export type RxConsumer = (message: any) => Promise<Object>;

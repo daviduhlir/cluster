@@ -1,5 +1,5 @@
 import { IPCTransferMessage, TransferIPCLayer } from './TransferIPCLayer';
-import { MethodNotFound, TrasferedError } from '../utils/Errors';
+import { MethodNotFound, TrasferedError } from '../utils/rrors';
 import { extractFilename, filterFiles } from '../utils/stackTrace';
 
 /**
