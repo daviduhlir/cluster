@@ -1,5 +1,8 @@
 import { extractFilename, filterFiles } from "./stackTrace";
 
+/**
+ * Error thrown by called message
+ */
 export class MessageResultError extends Error {
     constructor(message: string, stack: string, originalStack?: string) {
         super(message);
@@ -16,6 +19,9 @@ export class MessageResultError extends Error {
     }
 }
 
+/**
+ * Rejection of message transfer
+ */
 export class MessageTransferRejected extends Error {
     constructor(message: string, stack: string, originalStack?: string) {
         super(message);

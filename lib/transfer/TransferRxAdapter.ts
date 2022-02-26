@@ -1,6 +1,6 @@
 import { IPCTransferMessage, TransferIPCLayer } from './TransferIPCLayer';
-import { MethodNotFound, TrasferedError } from '../utils/rrors';
-import { extractFilename, filterFiles } from '../utils/stackTrace';
+import { MethodNotFound, TrasferedError } from '../utils/erors';
+import { extractFilename } from '../utils/stackTrace';
 
 /**
  * Receiver class is for object, where can be called methods remotly.
@@ -23,6 +23,12 @@ export class TransferRxAdapter {
     public destroy() {
         this.transferLayer.removeRxConsumer(this.clusterHandleMessage);
     }
+
+    /**********************************
+     *
+     * Internal methods
+     *
+     **********************************/
 
     /**
      * Handle incoming message.

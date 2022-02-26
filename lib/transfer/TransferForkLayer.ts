@@ -15,9 +15,6 @@ export const forkDefaultConfig = {
 };
 
 export class TransferForkLayer extends TransferIPCLayer {
-    protected living: boolean = true;
-    protected pingInterval: any = null;
-
     constructor(
         public readonly args: {[anything: string]: any} = {},
         public readonly config: ForkConfig = forkDefaultConfig,
@@ -77,6 +74,14 @@ export class TransferForkLayer extends TransferIPCLayer {
                 });
         }
     }
+
+    /**********************************
+     *
+     * Internal methods
+     *
+     **********************************/
+    protected living: boolean = true;
+    protected pingInterval: any = null;
 
     /**
      * Reset ping interval
