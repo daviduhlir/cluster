@@ -12,14 +12,14 @@ export declare class TransferForkLayer extends TransferIPCLayer {
         [anything: string]: any;
     };
     readonly config: ForkConfig;
-    protected living: boolean;
-    protected pingInterval: any;
     constructor(args?: {
         [anything: string]: any;
     }, config?: ForkConfig);
     stop(): void;
     restart(): void;
     ping(): void;
+    protected living: boolean;
+    protected pingInterval: any;
     protected resetPing(): void;
     protected setWorker(worker: any): void;
 }

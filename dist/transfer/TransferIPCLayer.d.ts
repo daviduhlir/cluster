@@ -16,16 +16,16 @@ export interface IPCTransferMessage {
 }
 export declare const EVENT_WORKER_CHANGED = "EVENT_WORKER_CHANGED";
 export declare class TransferIPCLayer extends EventEmitter {
-    protected static IPC_MESSAGE_HEADER: string;
-    protected attachedWorker: Worker | NodeJS.Process;
-    protected rxConsumers: RxConsumer[];
     constructor(worker: any);
     get worker(): Worker | NodeJS.Process;
-    protected setWorker(worker: any): void;
     send(messageToSend: IPCTransferMessage): Promise<any>;
-    protected handleIncommingMessage: (message: IPCTransferMessage) => Promise<void>;
     addRxConsumer(consumer: RxConsumer): void;
     removeRxConsumer(consumer: RxConsumer): void;
     call(method: string, args: any[], stackTrace?: string): Promise<any>;
     as<T>(): AsObject<T>;
+    protected static IPC_MESSAGE_HEADER: string;
+    protected attachedWorker: Worker | NodeJS.Process;
+    protected rxConsumers: RxConsumer[];
+    protected setWorker(worker: any): void;
+    protected handleIncommingMessage: (message: IPCTransferMessage) => Promise<void>;
 }

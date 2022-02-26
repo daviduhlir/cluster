@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const uuid_1 = require("uuid");
-const rrors_1 = require("../utils/rrors");
+const erors_1 = require("../utils/erors");
 const stackTrace_1 = require("../utils/stackTrace");
 exports.EVENT_WORKER_CHANGED = 'EVENT_WORKER_CHANGED';
 class TransferIPCLayer extends events_1.EventEmitter {
@@ -45,18 +45,9 @@ class TransferIPCLayer extends events_1.EventEmitter {
     get worker() {
         return this.attachedWorker;
     }
-    setWorker(worker) {
-        let wasAlreadySet = !!this.attachedWorker;
-        if (worker) {
-            this.attachedWorker = worker;
-            this.attachedWorker.removeAllListeners('message');
-            this.attachedWorker.addListener('message', this.handleIncommingMessage);
-        }
-        this.emit(exports.EVENT_WORKER_CHANGED, wasAlreadySet);
-    }
     send(messageToSend) {
         if (!this.worker) {
-            return Promise.reject(new rrors_1.MessageTransferRejected(`Call was rejected, worker is not exists anymore.`, messageToSend.stackTrace));
+            return Promise.reject(new erors_1.MessageTransferRejected(`Call was rejected, worker is not exists anymore.`, messageToSend.stackTrace));
         }
         return new Promise((resolve, reject) => {
             const id = uuid_1.v1();
@@ -67,7 +58,7 @@ class TransferIPCLayer extends events_1.EventEmitter {
                     this.removeListener(exports.EVENT_WORKER_CHANGED, rejectHandler);
                     this.worker.removeListener('message', messageHandler);
                     if (message.error) {
-                        reject(new rrors_1.MessageResultError(message.error.message, message.error.stack, message.error.originalStack));
+                        reject(new erors_1.MessageResultError(message.error.message, message.error.stack, message.error.originalStack));
                     }
                     else {
                         resolve(message.result);
@@ -77,7 +68,7 @@ class TransferIPCLayer extends events_1.EventEmitter {
             const rejectHandler = (message) => {
                 this.removeListener(exports.EVENT_WORKER_CHANGED, rejectHandler);
                 this.worker.removeListener('message', messageHandler);
-                reject(new rrors_1.MessageTransferRejected(`Call was rejected, due to worker was chenged.`, messageToSend.stackTrace));
+                reject(new erors_1.MessageTransferRejected(`Call was rejected, due to worker was chenged.`, messageToSend.stackTrace));
             };
             this.worker.addListener('message', messageHandler);
             this.addListener(exports.EVENT_WORKER_CHANGED, rejectHandler);
@@ -115,6 +106,15 @@ class TransferIPCLayer extends events_1.EventEmitter {
                 };
             }
         });
+    }
+    setWorker(worker) {
+        let wasAlreadySet = !!this.attachedWorker;
+        if (worker) {
+            this.attachedWorker = worker;
+            this.attachedWorker.removeAllListeners('message');
+            this.attachedWorker.addListener('message', this.handleIncommingMessage);
+        }
+        this.emit(exports.EVENT_WORKER_CHANGED, wasAlreadySet);
     }
 }
 exports.TransferIPCLayer = TransferIPCLayer;

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const rrors_1 = require("../utils/rrors");
+const erors_1 = require("../utils/erors");
 const stackTrace_1 = require("../utils/stackTrace");
 class TransferRxAdapter {
     constructor(receiver, transferLayer) {
@@ -13,14 +13,14 @@ class TransferRxAdapter {
                 }
                 if (!this.receiver[message.method]) {
                     const file = stackTrace_1.extractFilename(Error().stack);
-                    throw new rrors_1.TrasferedError(new rrors_1.MethodNotFound(`Method ${message.method} was not found on receiver.`), [file]);
+                    throw new erors_1.TrasferedError(new erors_1.MethodNotFound(`Method ${message.method} was not found on receiver.`), [file]);
                 }
                 try {
                     return await this.receiver[message.method].apply(this.receiver, message.args);
                 }
                 catch (e) {
                     const file = stackTrace_1.extractFilename(Error().stack);
-                    throw new rrors_1.TrasferedError(e, [file]);
+                    throw new erors_1.TrasferedError(e, [file]);
                 }
             }
         };

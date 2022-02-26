@@ -57,4 +57,4 @@ class TrasferedError extends Error {
     }
 }
 exports.TrasferedError = TrasferedError;
-//# sourceMappingURL=rrors.js.map
+//# sourceMappingURL=erors.js.map

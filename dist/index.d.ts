@@ -1,3 +1,3 @@
 export * from './Worker';
-export * from './utils/rrors';
+export * from './utils/erors';
 export * from './transfer';
