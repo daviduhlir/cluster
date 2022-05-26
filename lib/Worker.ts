@@ -14,7 +14,7 @@ export class Worker<TParams = any, TWorker = any> {
     protected id: string;
     protected forkHandler: TransferForkLayer;
     protected masterHandler: TransferIPCLayer;
-    protected TransferRxAdapter: TransferRxAdapter;
+    protected transferRxAdapter: TransferRxAdapter;
 
     constructor(public readonly params: TParams, public readonly forkHandlerConfig?: ForkConfig) {
         this.init();
@@ -28,7 +28,7 @@ export class Worker<TParams = any, TWorker = any> {
             // generate id for pair with fork
             this.id = uuidv1();
             this.forkHandler = new TransferForkLayer({ _fork_id: this.id }, this.forkHandlerConfig);
-            this.TransferRxAdapter = new TransferRxAdapter(this, this.forkHandler);
+            this.transferRxAdapter = new TransferRxAdapter(this, this.forkHandler);
             this.callInitializeWorkerFork();
 
             // if worker is changed, call init again
@@ -36,13 +36,13 @@ export class Worker<TParams = any, TWorker = any> {
         } else {
             this.masterHandler = new TransferIPCLayer(process);
             // init rx adapter
-            this.TransferRxAdapter = new TransferRxAdapter({
+            this.transferRxAdapter = new TransferRxAdapter({
                 initWorker: async (id: string, params: TParams) => {
                     if (id === process.env._fork_id) {
                         // reinit TransferRxAdapter
-                        this.TransferRxAdapter.destroy();
+                        this.transferRxAdapter.destroy();
                         // create adapter to only receive initWorker on this fork
-                        this.TransferRxAdapter = new TransferRxAdapter(
+                        this.transferRxAdapter = new TransferRxAdapter(
                             await this.initWorker(params, this.masterHandler.as<any>()),
                             this.masterHandler,
                         );
