@@ -58,36 +58,48 @@ export class RPCTransmitLayer {
 }
 
 export class RPCReceiverLayer {
+  protected attached = []
+
   constructor(
-      public readonly process: NodeJS.Process | cluster.Worker,
-      protected readonly handlers: {[name: string]: (...args: any[]) => Promise<any>} = null,
+      protected readonly handlers: {[name: string]: (...args: any[]) => Promise<any>},
+      public readonly process: NodeJS.Process | cluster.Worker = null,
   ) {
-    if (handlers) {
-      process.addListener('message', this.handleIncommingMessage)
+    if (this.process) {
+      this.attach(this.process)
     }
   }
 
-  public detach() {
-    process.removeListener('message', this.handleIncommingMessage)
+  public attach(process: NodeJS.Process | cluster.Worker) {
+    const method = this.handleIncommingMessage.bind(this, process)
+    this.attached.push([process, method])
+    process.addListener('message', method)
   }
 
-  protected handleIncommingMessage = async (message) => {
-      // init worker
-      if (message.RPC_MESSAGE && message.CALL_METHOD && this.handlers?.[message.CALL_METHOD]) {
-        try {
-          const result = await this.handlers[message.CALL_METHOD](...message.args)
-          this.process.send({
-              RPC_MESSAGE: message.RPC_MESSAGE,
-              CALL_METHOD: message.CALL_METHOD,
-              result,
-          })
-        } catch(e) {
-          this.process.send({
+  public detach(process: NodeJS.Process | cluster.Worker) {
+    const t = this.attached.find(i => i[0] === process)
+    if (t) {
+      process.removeListener('message', t[1])
+      this.attached = this.attached.filter(i => i[0] !== process)
+    }
+  }
+
+  protected handleIncommingMessage = async (sender, message) => {
+    // init worker
+    if (message.RPC_MESSAGE && message.CALL_METHOD && this.handlers?.[message.CALL_METHOD]) {
+      try {
+        const result = await this.handlers[message.CALL_METHOD](...message.args)
+        sender.send({
             RPC_MESSAGE: message.RPC_MESSAGE,
             CALL_METHOD: message.CALL_METHOD,
-            error: e.message,
-          })
-        }
+            result,
+        })
+      } catch(e) {
+        sender.send({
+          RPC_MESSAGE: message.RPC_MESSAGE,
+          CALL_METHOD: message.CALL_METHOD,
+          error: e.message,
+        })
       }
+    }
   }
 }
