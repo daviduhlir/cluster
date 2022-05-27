@@ -1,6 +1,6 @@
 import { Worker } from 'cluster';
 import { EventEmitter } from 'events';
-import { v1 as uuidv1 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 import { MessageResultError, MessageTransferRejected } from '../utils/erors';
 import { extractFilename, filterFiles } from '../utils/stackTrace';
 
@@ -48,7 +48,7 @@ export class TransferIPCLayer extends EventEmitter {
             return Promise.reject(new MessageTransferRejected(`Call was rejected, worker is not exists anymore.`, messageToSend.stackTrace))
         }
         return new Promise((resolve, reject) => {
-            const id = uuidv1();
+            const id = uuid();
 
             // message handler
             const messageHandler = (message) => {
@@ -162,6 +162,7 @@ export class TransferIPCLayer extends EventEmitter {
             typeof message === 'object' && !Array.isArray(message) &&
             message.hasOwnProperty(TransferIPCLayer.IPC_MESSAGE_HEADER)
         ) {
+            console.log('Incomming', process.pid, process.env._fork_id, message)
             let result = null;
             let error = null;
             let wasSuccess = false;

@@ -39,6 +39,10 @@ export class TransferRxAdapter {
             if (!this.receiver) {
                 throw new Error('Receiver is not set');
             }
+            if (message.method === 'ping') {
+                return;
+            }
+
             if (!this.receiver[message.method]) {
                 const file = extractFilename(Error().stack);
                 throw new TrasferedError(new MethodNotFound(`Method ${message.method} was not found on receiver.`), [file]);

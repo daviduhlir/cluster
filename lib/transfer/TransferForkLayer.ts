@@ -55,7 +55,7 @@ export class TransferForkLayer extends TransferIPCLayer {
      * @param txAdapter
      */
     public ping() {
-        if (this.living) {
+        /*if (this.living) {
             // if this is on local
             // timeout, we will wait this tome before kill this fork
             const killTimeout = setTimeout(() => {
@@ -67,12 +67,12 @@ export class TransferForkLayer extends TransferIPCLayer {
             this.as<any>().ping()
                 .then(() => {
                     clearTimeout(killTimeout);
-                }, () => {
-                    console.warn(`Fork ping failed.`);
+                }, (e) => {
+                    console.warn(`Fork ping failed.`, e);
                     clearTimeout(killTimeout);
                     this.restart();
                 });
-        }
+        }*/
     }
 
     /**********************************

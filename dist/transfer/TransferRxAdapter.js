@@ -11,6 +11,9 @@ class TransferRxAdapter {
                 if (!this.receiver) {
                     throw new Error('Receiver is not set');
                 }
+                if (message.method === 'ping') {
+                    return;
+                }
                 if (!this.receiver[message.method]) {
                     const file = stackTrace_1.extractFilename(Error().stack);
                     throw new erors_1.TrasferedError(new erors_1.MethodNotFound(`Method ${message.method} was not found on receiver.`), [file]);

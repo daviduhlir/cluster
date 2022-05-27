@@ -33,20 +33,6 @@ class TransferForkLayer extends TransferIPCLayer_1.TransferIPCLayer {
         this.setWorker(null);
     }
     ping() {
-        if (this.living) {
-            const killTimeout = setTimeout(() => {
-                console.warn(`Fork not responding to ping.`);
-                this.restart();
-            }, this.config.PING_MAX_TIME);
-            this.as().ping()
-                .then(() => {
-                clearTimeout(killTimeout);
-            }, () => {
-                console.warn(`Fork ping failed.`);
-                clearTimeout(killTimeout);
-                this.restart();
-            });
-        }
     }
     resetPing() {
         if (this.pingInterval) {

@@ -13,6 +13,7 @@ class TransferIPCLayer extends events_1.EventEmitter {
         this.handleIncommingMessage = async (message) => {
             if (typeof message === 'object' && !Array.isArray(message) &&
                 message.hasOwnProperty(TransferIPCLayer.IPC_MESSAGE_HEADER)) {
+                console.log('Incomming', process.pid, process.env._fork_id, message);
                 let result = null;
                 let error = null;
                 let wasSuccess = false;
@@ -50,7 +51,7 @@ class TransferIPCLayer extends events_1.EventEmitter {
             return Promise.reject(new erors_1.MessageTransferRejected(`Call was rejected, worker is not exists anymore.`, messageToSend.stackTrace));
         }
         return new Promise((resolve, reject) => {
-            const id = uuid_1.v1();
+            const id = uuid_1.v4();
             const messageHandler = (message) => {
                 if (typeof message === 'object' && !Array.isArray(message) &&
                     message.hasOwnProperty(TransferIPCLayer.IPC_MESSAGE_HEADER) &&
