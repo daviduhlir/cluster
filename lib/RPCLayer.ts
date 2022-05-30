@@ -12,7 +12,7 @@ export class RPCTransmitLayer {
         public readonly process: NodeJS.Process | cluster.Worker,
     ) {}
 
-    public async callMethod(mthodName: string, args: any[]): Promise<any> {
+    public async callMethod(methodName: string, args: any[]): Promise<any> {
       const hash = randomHash()
 
       return new Promise((resolve, reject) => {
@@ -37,7 +37,7 @@ export class RPCTransmitLayer {
 
         this.sendRaw({
           RPC_MESSAGE: hash,
-          CALL_METHOD: mthodName,
+          CALL_METHOD: methodName,
           args,
         })
       });
@@ -69,12 +69,18 @@ export class RPCReceiverLayer {
     }
   }
 
+  /**
+   * Attach process
+   */
   public attach(process: NodeJS.Process | cluster.Worker) {
     const method = this.handleIncommingMessage.bind(this, process)
     this.attached.push([process, method])
     process.addListener('message', method)
   }
 
+  /**
+   * Detach process
+   */
   public detach(process: NodeJS.Process | cluster.Worker) {
     const t = this.attached.find(i => i[0] === process)
     if (t) {
@@ -83,6 +89,21 @@ export class RPCReceiverLayer {
     }
   }
 
+  /**
+   * Remove all handlers
+   */
+  public destroy() {
+    this.attached.forEach(i => {
+      process.removeListener('message', i[1]);
+    })
+    this.attached = []
+  }
+
+  /**
+   * Internal message handler
+   * @param sender
+   * @param message
+   */
   protected handleIncommingMessage = async (sender, message) => {
     // init worker
     if (message.RPC_MESSAGE && message.CALL_METHOD && this.handlers?.[message.CALL_METHOD]) {
