@@ -1,9 +1,6 @@
-import { RPCTransmitLayer, RPCReceiverLayer, PROCESS_CHANGED } from './RPCLayer'
+import { RPCTransmitLayer } from '../RPC/RPCTransmitLayer'
 import * as cluster from 'cluster'
-
-export type ArgumentTypes<T> = T extends (...args: infer U) => infer R ? U : never
-export type Await<T> = T extends PromiseLike<infer U> ? U : T
-export type HandlersMap = { [name: string]: (...args: any[]) => Promise<any> }
+import { ClusterHolder } from '../utils/ClusterHolder'
 
 export const WORKER_INITIALIZED = 'WORKER_INITIALIZED'
 
@@ -21,6 +18,7 @@ export const forkDefaultConfig = {
   PING_MAX_TIME: 1000,
   PING_RESTART_ON_TIMEOUT: true,
 }
+
 export interface WorkerSystemHandler {
   INITIALIZE_WORKER: (name: string, args: any[]) => Promise<void>
   PING: () => Promise<number>
@@ -103,7 +101,7 @@ export class ForkHandler<T> extends RPCTransmitLayer {
     if (this.process) {
       this.process.removeListener('exit', this.handleStop)
     }
-    this.process = cluster.fork()
+    this.process = ClusterHolder.fork()
     this.resetPing()
     this.process.addListener('exit', this.handleStop)
   }
@@ -165,99 +163,4 @@ export class ForkHandler<T> extends RPCTransmitLayer {
       clearTimeout(killTimeout)
     }
   }
-}
-
-/**
- * Main cluster initializator
- */
-export class Cluster<T extends HandlersMap, K extends HandlersMap = null> {
-  protected systemReceiverLayer: RPCReceiverLayer = null
-  protected receiverLayer: RPCReceiverLayer = null
-  protected transmitLayer: RPCTransmitLayer = null
-
-  /**
-   * Initialize whole app cluster holder.
-   * @param initializators is map of posible workes, these methods will be called, when you call run.[name] from
-   * master process.
-   * @param handlers this is handler on master process, which can be called from forks.
-   */
-  constructor(protected readonly initializators: T, protected readonly handlers: K) {
-    if (!cluster.isMaster) {
-      this.transmitLayer = new RPCTransmitLayer(process)
-      this.systemReceiverLayer = new RPCReceiverLayer(
-        {
-          INITIALIZE_WORKER: this.initializeWorker,
-          PING: this.ping,
-        },
-        process,
-      )
-    } else {
-      this.receiverLayer = new RPCReceiverLayer(handlers)
-    }
-  }
-
-  /**
-   * Get initializator handler
-   */
-  public get run(): { [K in keyof T]: (...args: ArgumentTypes<T[K]>) => Promise<ForkHandler<Await<ReturnType<T[K]>>>> } {
-    if (cluster.isMaster) {
-      return new Proxy(this as any, {
-        get:
-          (target, propKey, receiver) =>
-          async (...args) => {
-            const fork = new ForkHandler(propKey.toString(), args)
-            this.receiverLayer.attach(fork.process)
-
-            fork.addListener(PROCESS_CHANGED, ({ oldProcess, newProcess }) => {
-              if (oldProcess) {
-                this.receiverLayer.detach(oldProcess)
-              }
-              if (newProcess) {
-                this.receiverLayer.attach(oldProcess)
-              }
-            })
-
-            await fork.init()
-            return fork
-          },
-      })
-    } else {
-      throw new Error('Starting of forks outside of master process is not allowed')
-    }
-  }
-
-  /**
-   * Call something to master process.
-   */
-  public get call(): K {
-    if (!cluster.isMaster) {
-      return this.transmitLayer.as<K>()
-    }
-    return null
-  }
-
-  /**
-   * Internal initializator
-   * @param name
-   * @param args
-   * @returns
-   */
-  protected initializeWorker = async (name: string, args: any[]) => {
-    // if already initialized
-    if (this.receiverLayer) {
-      throw new Error('Worker was already initialized.')
-    }
-
-    if (this.initializators[name]) {
-      this.receiverLayer = new RPCReceiverLayer(await this.initializators[name](...args), process)
-      return
-    }
-    throw new Error(`Worker with name ${name} does not exists.`)
-  }
-
-  /**
-   * Ping response
-   * @returns
-   */
-  protected ping = async () => Date.now()
 }

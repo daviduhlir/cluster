@@ -12,17 +12,3 @@ export declare class RPCTransmitLayer extends EventEmitter {
     protected callMethod(methodName: string, args: any[]): Promise<any>;
     protected sendRaw(message: any): void;
 }
-export declare class RPCReceiverLayer {
-    protected readonly handlers: {
-        [name: string]: (...args: any[]) => Promise<any>;
-    };
-    readonly process: ProcessType;
-    protected attached: any[];
-    constructor(handlers: {
-        [name: string]: (...args: any[]) => Promise<any>;
-    }, process?: ProcessType);
-    attach(process: ProcessType): void;
-    detach(process: ProcessType): void;
-    destroy(): void;
-    protected handleIncommingMessage: (sender: any, message: any) => Promise<void>;
-}

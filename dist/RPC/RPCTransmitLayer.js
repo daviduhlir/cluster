@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
+const cluster = require("cluster");
+const utils_1 = require("../utils/utils");
 const events_1 = require("events");
 exports.PROCESS_CHANGED = 'PROCESS_CHANGED';
 class RPCTransmitLayer extends events_1.EventEmitter {
@@ -56,6 +57,7 @@ class RPCTransmitLayer extends events_1.EventEmitter {
             this.sendRaw({
                 RPC_MESSAGE: hash,
                 CALL_METHOD: methodName,
+                WORKER: cluster.isMaster ? 'master' : cluster.worker.id,
                 args,
             });
         });
@@ -67,52 +69,4 @@ class RPCTransmitLayer extends events_1.EventEmitter {
     }
 }
 exports.RPCTransmitLayer = RPCTransmitLayer;
-class RPCReceiverLayer {
-    constructor(handlers, process = null) {
-        this.handlers = handlers;
-        this.process = process;
-        this.attached = [];
-        this.handleIncommingMessage = async (sender, message) => {
-            if (message.RPC_MESSAGE && message.CALL_METHOD && this.handlers?.[message.CALL_METHOD]) {
-                try {
-                    const result = await this.handlers[message.CALL_METHOD](...message.args);
-                    sender.send({
-                        RPC_MESSAGE: message.RPC_MESSAGE,
-                        CALL_METHOD: message.CALL_METHOD,
-                        result,
-                    });
-                }
-                catch (e) {
-                    sender.send({
-                        RPC_MESSAGE: message.RPC_MESSAGE,
-                        CALL_METHOD: message.CALL_METHOD,
-                        error: e.message,
-                    });
-                }
-            }
-        };
-        if (this.process) {
-            this.attach(this.process);
-        }
-    }
-    attach(process) {
-        const method = this.handleIncommingMessage.bind(this, process);
-        this.attached.push([process, method]);
-        process.addListener('message', method);
-    }
-    detach(process) {
-        const t = this.attached.find(i => i[0] === process);
-        if (t) {
-            process.removeListener('message', t[1]);
-            this.attached = this.attached.filter(i => i[0] !== process);
-        }
-    }
-    destroy() {
-        this.attached.forEach(i => {
-            process.removeListener('message', i[1]);
-        });
-        this.attached = [];
-    }
-}
-exports.RPCReceiverLayer = RPCReceiverLayer;
-//# sourceMappingURL=RPCLayer.js.map
+//# sourceMappingURL=RPCTransmitLayer.js.map
