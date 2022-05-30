@@ -10,7 +10,10 @@ const system = new Cluster({
         return {
             test: () => {
                 console.log('Hello world from RPC', process.pid)
-                setTimeout(() => system.call.pong(), 1000)
+                // setTimeout(() => system.call.pong(), 1000)
+            },
+            freeze: () => {
+                while(true);
             }
         }
     },
@@ -24,11 +27,18 @@ const system = new Cluster({
 if (cluster.isMaster) {
     (async function () {
         const handle1 = await system.run.main1('test1')
-        handle1.handler.test()
+        await handle1.call.test()
 
-        const handle2 = await system.run.main1('test2')
-        handle2.handler.test()
+        /*const handle2 = await system.run.main1('test2')
+        await handle2.call.test()
 
-        const handle3 = await  system.run.main2()
+        const handle3 = await  system.run.main2()*/
+
+        setTimeout(async () => {
+            console.log('Calling freeze')
+            try {
+                await handle1.call.freeze()
+            } catch(e) {}
+        }, 1000)
     })()
 }

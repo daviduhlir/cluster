@@ -5,20 +5,25 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rimraf ./dist && tsc"
+    "build": "rimraf ./dist && tsc",
+    "prettier-format": "prettier --config .prettierrc.json 'lib/**/*.ts' --write"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/daviduhlir/cluster.git"
   },
+  "keywords": [
+    "cluster",
+    "workers",
+    "node",
+    "util"
+  ],
   "author": "David Uhlíř",
   "license": "ISC",
   "dependencies": {
-    "@types/npm": "^2.0.29",
     "rimraf": "^2.6.2",
-    "stacktrace-parser": "^0.1.10",
     "typescript": "^3.8.3",
-    "uuid": "^3.2.1"
+    "prettier": "^2.6.2"
   },
   "devDependencies": {
     "@types/node": "^13.11.1"

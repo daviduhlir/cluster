@@ -1,23 +1,28 @@
 /// <reference types="node" />
 import * as cluster from 'cluster';
-export declare class RPCTransmitLayer {
-    readonly process: NodeJS.Process | cluster.Worker;
-    constructor(process: NodeJS.Process | cluster.Worker);
-    callMethod(methodName: string, args: any[]): Promise<any>;
+import { EventEmitter } from 'events';
+export declare type ProcessType = NodeJS.Process | cluster.Worker;
+export declare const PROCESS_CHANGED = "PROCESS_CHANGED";
+export declare class RPCTransmitLayer extends EventEmitter {
+    protected processHandler: ProcessType;
+    constructor(process?: ProcessType);
+    set process(process: ProcessType);
+    get process(): ProcessType;
     as<T>(): T;
+    protected callMethod(methodName: string, args: any[]): Promise<any>;
     protected sendRaw(message: any): void;
 }
 export declare class RPCReceiverLayer {
     protected readonly handlers: {
         [name: string]: (...args: any[]) => Promise<any>;
     };
-    readonly process: NodeJS.Process | cluster.Worker;
+    readonly process: ProcessType;
     protected attached: any[];
     constructor(handlers: {
         [name: string]: (...args: any[]) => Promise<any>;
-    }, process?: NodeJS.Process | cluster.Worker);
-    attach(process: NodeJS.Process | cluster.Worker): void;
-    detach(process: NodeJS.Process | cluster.Worker): void;
+    }, process?: ProcessType);
+    attach(process: ProcessType): void;
+    detach(process: ProcessType): void;
     destroy(): void;
     protected handleIncommingMessage: (sender: any, message: any) => Promise<void>;
 }

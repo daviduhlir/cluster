@@ -4,17 +4,36 @@ export declare type Await<T> = T extends PromiseLike<infer U> ? U : T;
 export declare type HandlersMap = {
     [name: string]: (...args: any[]) => Promise<any>;
 };
-export interface WorkerInitializatorhandler {
+export interface ForkConfig {
+    PING_INTERVAL?: number;
+    PING_MAX_TIME?: number;
+    PING_RESTART_ON_TIMEOUT?: boolean;
+}
+export declare const forkDefaultConfig: {
+    PING_INTERVAL: number;
+    PING_MAX_TIME: number;
+    PING_RESTART_ON_TIMEOUT: boolean;
+};
+export interface WorkerSystemHandler {
     INITIALIZE_WORKER: (name: string, args: any[]) => Promise<void>;
+    PING: () => Promise<number>;
 }
 export declare class ForkHandler<T> extends RPCTransmitLayer {
     protected readonly name: string;
     protected readonly args: any[];
-    protected forkId: string;
-    constructor(name: string, args: any[]);
+    readonly config: ForkConfig;
+    protected isLiving: boolean;
+    protected pingInterval: any;
+    constructor(name: string, args: any[], config?: ForkConfig);
     init(): Promise<void>;
-    get id(): string;
-    get handler(): T;
+    get call(): T;
+    kill(): void;
+    restart(): void;
+    protected fork(): void;
+    protected handleStop: (code: string, signal: string) => Promise<void>;
+    protected resetPing(): void;
+    protected stopPing(): void;
+    protected ping(): Promise<void>;
 }
 export declare class Cluster<T extends HandlersMap, K extends HandlersMap = null> {
     protected readonly initializators: T;
@@ -28,4 +47,5 @@ export declare class Cluster<T extends HandlersMap, K extends HandlersMap = null
     };
     get call(): K;
     protected initializeWorker: (name: string, args: any[]) => Promise<void>;
+    protected ping: () => Promise<number>;
 }
