@@ -164,7 +164,7 @@ export class ForkHandler<T> extends RPCTransmitLayer {
  * Main cluster initializator
  */
 export class Cluster<T extends HandlersMap, K extends HandlersMap = null> {
-  protected initReceiverLayer: RPCReceiverLayer = null
+  protected systemReceiverLayer: RPCReceiverLayer = null
   protected receiverLayer: RPCReceiverLayer = null
   protected transmitLayer: RPCTransmitLayer = null
 
@@ -177,7 +177,7 @@ export class Cluster<T extends HandlersMap, K extends HandlersMap = null> {
   constructor(protected readonly initializators: T, protected readonly handlers: K) {
     if (!cluster.isMaster) {
       this.transmitLayer = new RPCTransmitLayer(process)
-      this.initReceiverLayer = new RPCReceiverLayer(
+      this.systemReceiverLayer = new RPCReceiverLayer(
         {
           INITIALIZE_WORKER: this.initializeWorker,
           PING: this.ping,
