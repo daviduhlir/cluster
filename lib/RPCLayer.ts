@@ -123,10 +123,7 @@ export class RPCReceiverLayer {
    * @param handlers map of methods, that can be called from outside
    * @param process what you are listening, you can attach more by calling attach method
    */
-  constructor(
-    protected readonly handlers: { [name: string]: (...args: any[]) => Promise<any> },
-    public readonly process: ProcessType = null,
-  ) {
+  constructor(protected readonly handlers: { [name: string]: (...args: any[]) => Promise<any> }, public readonly process: ProcessType = null) {
     if (this.process) {
       this.attach(this.process)
     }

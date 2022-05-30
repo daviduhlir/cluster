@@ -9,16 +9,16 @@ export type HandlersMap = { [name: string]: (...args: any[]) => Promise<any> }
  * Fork configuration
  */
 export interface ForkConfig {
-  PING_INTERVAL?: number;
-  PING_MAX_TIME?: number;
-  PING_RESTART_ON_TIMEOUT?: boolean;
+  PING_INTERVAL?: number
+  PING_MAX_TIME?: number
+  PING_RESTART_ON_TIMEOUT?: boolean
 }
 
 export const forkDefaultConfig = {
   PING_INTERVAL: 5000,
   PING_MAX_TIME: 1000,
   PING_RESTART_ON_TIMEOUT: true,
-};
+}
 export interface WorkerSystemHandler {
   INITIALIZE_WORKER: (name: string, args: any[]) => Promise<void>
   PING: () => Promise<number>
@@ -29,13 +29,9 @@ export interface WorkerSystemHandler {
  */
 export class ForkHandler<T> extends RPCTransmitLayer {
   protected isLiving = true
-  protected pingInterval: any = null;
+  protected pingInterval: any = null
 
-  constructor(
-    protected readonly name: string,
-    protected readonly args: any[],
-    public readonly config: ForkConfig = forkDefaultConfig,
-  ) {
+  constructor(protected readonly name: string, protected readonly args: any[], public readonly config: ForkConfig = forkDefaultConfig) {
     super()
     this.fork()
   }
@@ -71,9 +67,9 @@ export class ForkHandler<T> extends RPCTransmitLayer {
       throw new Error(`You can't kill worker, that is no longer living.`)
     }
 
-    if (this.pingInterval){
-        clearInterval(this.pingInterval);
-        this.pingInterval = null;
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval)
+      this.pingInterval = null
     }
     console.log(`CLUSTER [${this.name} ${process.pid}] Call fork force kill`)
     this.isLiving = false
@@ -122,46 +118,46 @@ export class ForkHandler<T> extends RPCTransmitLayer {
    * Reset ping interval
    */
   protected resetPing() {
-      this.stopPing()
-      // ping interval
-      if (this.config.PING_INTERVAL && this.process && this.isLiving) {
-          this.pingInterval = setInterval(() => this.ping(), this.config.PING_INTERVAL);
-      }
+    this.stopPing()
+    // ping interval
+    if (this.config.PING_INTERVAL && this.process && this.isLiving) {
+      this.pingInterval = setInterval(() => this.ping(), this.config.PING_INTERVAL)
+    }
   }
 
   /**
    * Stop ping interval
    */
-   protected stopPing() {
-    if (this.pingInterval){
-        clearInterval(this.pingInterval);
-        this.pingInterval = null;
+  protected stopPing() {
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval)
+      this.pingInterval = null
     }
   }
 
   /**
    * Call ping
    */
-    protected async ping() {
-      if (this.isLiving) {
-        // if this is on local
-        // timeout, we will wait this tome before kill this fork
-        const killTimeout = setTimeout(() => {
-            console.warn(`CLUSTER [${this.name} ${process.pid}] Fork not responding to ping`);
-            if (this.config.PING_RESTART_ON_TIMEOUT) {
-              this.restart();
-            } else {
-              this.kill()
-            }
-        }, this.config.PING_MAX_TIME);
+  protected async ping() {
+    if (this.isLiving) {
+      // if this is on local
+      // timeout, we will wait this tome before kill this fork
+      const killTimeout = setTimeout(() => {
+        console.warn(`CLUSTER [${this.name} ${process.pid}] Fork not responding to ping`)
+        if (this.config.PING_RESTART_ON_TIMEOUT) {
+          this.restart()
+        } else {
+          this.kill()
+        }
+      }, this.config.PING_MAX_TIME)
 
-        try {
-          await this.as<WorkerSystemHandler>().PING()
-        } catch(e) {}
+      try {
+        await this.as<WorkerSystemHandler>().PING()
+      } catch (e) {}
 
-        clearTimeout(killTimeout);
-      }
+      clearTimeout(killTimeout)
     }
+  }
 }
 
 /**
@@ -203,14 +199,14 @@ export class Cluster<T extends HandlersMap, K extends HandlersMap = null> {
           (target, propKey, receiver) =>
           async (...args) => {
             const fork = new ForkHandler(propKey.toString(), args)
-            this.receiverLayer.attach(fork.process);
+            this.receiverLayer.attach(fork.process)
 
             fork.addListener(PROCESS_CHANGED, ({ oldProcess, newProcess }) => {
               if (oldProcess) {
-                this.receiverLayer.detach(oldProcess);
+                this.receiverLayer.detach(oldProcess)
               }
               if (newProcess) {
-                this.receiverLayer.attach(oldProcess);
+                this.receiverLayer.attach(oldProcess)
               }
             })
 
