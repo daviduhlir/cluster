@@ -4,6 +4,7 @@ export declare type Await<T> = T extends PromiseLike<infer U> ? U : T;
 export declare type HandlersMap = {
     [name: string]: (...args: any[]) => Promise<any>;
 };
+export declare const WORKER_INITIALIZED = "WORKER_INITIALIZED";
 export interface ForkConfig {
     PING_INTERVAL?: number;
     PING_MAX_TIME?: number;
@@ -38,7 +39,7 @@ export declare class ForkHandler<T> extends RPCTransmitLayer {
 export declare class Cluster<T extends HandlersMap, K extends HandlersMap = null> {
     protected readonly initializators: T;
     protected readonly handlers: K;
-    protected initReceiverLayer: RPCReceiverLayer;
+    protected systemReceiverLayer: RPCReceiverLayer;
     protected receiverLayer: RPCReceiverLayer;
     protected transmitLayer: RPCTransmitLayer;
     constructor(initializators: T, handlers: K);

@@ -5,6 +5,8 @@ export type ArgumentTypes<T> = T extends (...args: infer U) => infer R ? U : nev
 export type Await<T> = T extends PromiseLike<infer U> ? U : T
 export type HandlersMap = { [name: string]: (...args: any[]) => Promise<any> }
 
+export const WORKER_INITIALIZED = 'WORKER_INITIALIZED'
+
 /**
  * Fork configuration
  */
@@ -44,7 +46,12 @@ export class ForkHandler<T> extends RPCTransmitLayer {
       if (!this.isLiving) {
         throw new Error(`You can't call init on worker, that is no longer living.`)
       }
-      return this.as<WorkerSystemHandler>().INITIALIZE_WORKER(this.name, this.args)
+      await this.as<WorkerSystemHandler>().INITIALIZE_WORKER(this.name, this.args)
+
+      // TODO, this hack is here, because when you will attach to this event after starting of cluster
+      // you will not receive it (this method is part of init process, and this event will be emitted before end of promise)
+      setImmediate(() => this.emit(WORKER_INITIALIZED))
+      return
     }
     throw new Error('Calling of init outside of master process is not allowed')
   }

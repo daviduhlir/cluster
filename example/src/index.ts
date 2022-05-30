@@ -1,11 +1,12 @@
 import * as cluster from 'cluster';
 import { Cluster } from '@david.uhlir/cluster'
+import { WORKER_INITIALIZED } from '../../dist';
 
 /**
  * USAGE
  */
 const system = new Cluster({
-    main1: async (name: string) => {
+    main: async (name: string) => {
         console.log('Initialize main ', name, process.pid)
         return {
             test: () => {
@@ -17,22 +18,14 @@ const system = new Cluster({
             }
         }
     },
-    main2: async () => {
-        console.log('Initialize main 2', process.pid)
-    }
 }, {
     pong: async () => console.log('hello world')
 })
 
 if (cluster.isMaster) {
     (async function () {
-        const handle1 = await system.run.main1('test1')
-        await handle1.call.test()
-
-        /*const handle2 = await system.run.main1('test2')
-        await handle2.call.test()
-
-        const handle3 = await  system.run.main2()*/
+        const handle1 = await system.run.main('test1')
+        handle1.on(WORKER_INITIALIZED, () => handle1.call.test())
 
         setTimeout(async () => {
             console.log('Calling freeze')

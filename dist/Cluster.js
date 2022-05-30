@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const RPCLayer_1 = require("./RPCLayer");
 const cluster = require("cluster");
+exports.WORKER_INITIALIZED = 'WORKER_INITIALIZED';
 exports.forkDefaultConfig = {
     PING_INTERVAL: 5000,
     PING_MAX_TIME: 1000,
@@ -32,7 +33,9 @@ class ForkHandler extends RPCLayer_1.RPCTransmitLayer {
             if (!this.isLiving) {
                 throw new Error(`You can't call init on worker, that is no longer living.`);
             }
-            return this.as().INITIALIZE_WORKER(this.name, this.args);
+            await this.as().INITIALIZE_WORKER(this.name, this.args);
+            setImmediate(() => this.emit(exports.WORKER_INITIALIZED));
+            return;
         }
         throw new Error('Calling of init outside of master process is not allowed');
     }
@@ -107,7 +110,7 @@ class Cluster {
     constructor(initializators, handlers) {
         this.initializators = initializators;
         this.handlers = handlers;
-        this.initReceiverLayer = null;
+        this.systemReceiverLayer = null;
         this.receiverLayer = null;
         this.transmitLayer = null;
         this.initializeWorker = async (name, args) => {
@@ -123,7 +126,7 @@ class Cluster {
         this.ping = async () => Date.now();
         if (!cluster.isMaster) {
             this.transmitLayer = new RPCLayer_1.RPCTransmitLayer(process);
-            this.initReceiverLayer = new RPCLayer_1.RPCReceiverLayer({
+            this.systemReceiverLayer = new RPCLayer_1.RPCReceiverLayer({
                 INITIALIZE_WORKER: this.initializeWorker,
                 PING: this.ping,
             }, process);
