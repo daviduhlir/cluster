@@ -7,8 +7,18 @@ import { ForkHandler } from './ForkHandler'
  * Main cluster initializator
  */
 export class Cluster<T extends HandlersMap> {
+  protected static alreadyInitialized: boolean = false
+
   protected systemReceiverLayer: RPCReceiverLayer = null
   protected receiverLayer: RPCReceiverLayer = null
+
+  public static Initialize<T extends HandlersMap>(initializators: T): Cluster<T> {
+    if (Cluster.alreadyInitialized) {
+      throw new Error(`Cluster can be initialized only once.`)
+    }
+    Cluster.alreadyInitialized = true
+    return new Cluster(initializators)
+  }
 
   /**
    * Initialize whole app cluster holder.
@@ -16,7 +26,7 @@ export class Cluster<T extends HandlersMap> {
    * master process.
    * @param handlers this is handler on master process, which can be called from forks.
    */
-  constructor(protected readonly initializators: T) {
+  protected constructor(protected readonly initializators: T) {
     if (!cluster.isMaster) {
       this.systemReceiverLayer = new RPCReceiverLayer({
         INITIALIZE_WORKER: this.initializeWorker,

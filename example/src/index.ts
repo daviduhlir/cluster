@@ -5,11 +5,11 @@ import { WORKER_INITIALIZED } from '../../dist';
 /**
  * USAGE
  */
-const master = new MasterHandler({
+const master = MasterHandler.Initialize({
     pong: async () => console.log('hello world received on master')
 })
 
-const workers = new Cluster({
+const workers = Cluster.Initialize({
     main: async (name: string) => {
         console.log('Initialize main ', name, process.pid)
         return {

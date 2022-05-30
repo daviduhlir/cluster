@@ -15,6 +15,13 @@ class MasterHandler {
             this.transmitLayer = new RPCTransmitLayer_1.RPCTransmitLayer(process);
         }
     }
+    static Initialize(initializators) {
+        if (MasterHandler.alreadyInitialized) {
+            throw new Error(`Master handler can be initialized only once.`);
+        }
+        MasterHandler.alreadyInitialized = true;
+        return new MasterHandler(initializators);
+    }
     get call() {
         if (!cluster.isMaster) {
             return this.transmitLayer.as();
@@ -23,4 +30,5 @@ class MasterHandler {
     }
 }
 exports.MasterHandler = MasterHandler;
+MasterHandler.alreadyInitialized = false;
 //# sourceMappingURL=MasterHandler.js.map

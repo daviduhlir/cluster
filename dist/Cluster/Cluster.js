@@ -26,6 +26,13 @@ class Cluster {
             });
         }
     }
+    static Initialize(initializators) {
+        if (Cluster.alreadyInitialized) {
+            throw new Error(`Cluster can be initialized only once.`);
+        }
+        Cluster.alreadyInitialized = true;
+        return new Cluster(initializators);
+    }
     get run() {
         if (cluster.isMaster) {
             return new Proxy(this, {
@@ -42,4 +49,5 @@ class Cluster {
     }
 }
 exports.Cluster = Cluster;
+Cluster.alreadyInitialized = false;
 //# sourceMappingURL=Cluster.js.map

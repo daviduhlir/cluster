@@ -3,9 +3,11 @@ import { HandlersMap, ArgumentTypes, Await } from '../utils/types';
 import { ForkHandler } from './ForkHandler';
 export declare class Cluster<T extends HandlersMap> {
     protected readonly initializators: T;
+    protected static alreadyInitialized: boolean;
     protected systemReceiverLayer: RPCReceiverLayer;
     protected receiverLayer: RPCReceiverLayer;
-    constructor(initializators: T);
+    static Initialize<T extends HandlersMap>(initializators: T): Cluster<T>;
+    protected constructor(initializators: T);
     get run(): {
         [K in keyof T]: (...args: ArgumentTypes<T[K]>) => Promise<ForkHandler<Await<ReturnType<T[K]>>>>;
     };

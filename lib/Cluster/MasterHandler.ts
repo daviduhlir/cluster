@@ -6,11 +6,20 @@ import * as cluster from 'cluster'
 /**
  * Master process receiver
  */
-export class MasterHandler<T extends HandlersMap = null> {
+export class MasterHandler<T extends HandlersMap> {
+  protected static alreadyInitialized: boolean = false
   protected receiverLayer: RPCReceiverLayer = null
   protected transmitLayer: RPCTransmitLayer = null
 
-  constructor(protected readonly handlers: T) {
+  public static Initialize<T extends HandlersMap>(initializators: T): MasterHandler<T> {
+    if (MasterHandler.alreadyInitialized) {
+      throw new Error(`Master handler can be initialized only once.`)
+    }
+    MasterHandler.alreadyInitialized = true
+    return new MasterHandler(initializators)
+  }
+
+  protected constructor(protected readonly handlers: T) {
     if (cluster.isMaster) {
       this.receiverLayer = new RPCReceiverLayer(handlers)
     } else {
