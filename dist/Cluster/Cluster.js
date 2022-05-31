@@ -6,6 +6,7 @@ const ForkHandler_1 = require("./ForkHandler");
 class Cluster {
     constructor(initializators) {
         this.initializators = initializators;
+        this.runningHandlers = {};
         this.systemReceiverLayer = null;
         this.receiverLayer = null;
         this.initializeWorker = async (name, args) => {
@@ -36,16 +37,25 @@ class Cluster {
     get run() {
         if (cluster.isMaster) {
             return new Proxy(this, {
-                get: (target, propKey, receiver) => async (...args) => {
-                    const fork = new ForkHandler_1.ForkHandler(propKey.toString(), args);
-                    await fork.init();
-                    return fork;
-                },
+                get: (target, name, receiver) => async (...args) => this.startFork(name.toString(), args),
             });
         }
         else {
             throw new Error('Starting of forks outside of master process is not allowed');
         }
+    }
+    getRunningForks(name) {
+        return this.runningHandlers[name] || [];
+    }
+    removeRunningFork(fork) {
+        this.runningHandlers[fork.name] = (this.runningHandlers[fork.name] || []).filter(i => i !== fork);
+    }
+    async startFork(name, args) {
+        const fork = new ForkHandler_1.ForkHandler(name, args);
+        await fork.init();
+        this.runningHandlers[name] = [...(this.runningHandlers[name] || []), fork];
+        fork.addListener(ForkHandler_1.WORKER_DIED, this.removeRunningFork);
+        return fork;
     }
 }
 exports.Cluster = Cluster;

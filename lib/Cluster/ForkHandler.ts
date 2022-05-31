@@ -3,6 +3,8 @@ import * as cluster from 'cluster'
 import { ClusterHolder } from '../utils/ClusterHolder'
 
 export const WORKER_INITIALIZED = 'WORKER_INITIALIZED'
+export const WORKER_DIED = 'WORKER_DIED'
+export const WORKER_RESTARTED = 'WORKER_RESTARTED'
 
 /**
  * Fork configuration
@@ -31,7 +33,11 @@ export class ForkHandler<T> extends RPCTransmitLayer {
   protected isLiving = true
   protected pingInterval: any = null
 
-  constructor(protected readonly name: string, protected readonly args: any[], public readonly config: ForkConfig = forkDefaultConfig) {
+  constructor(
+    public readonly name: string,
+    protected readonly args: any[],
+    public readonly config: ForkConfig = forkDefaultConfig,
+  ) {
     super()
     this.fork()
   }
@@ -114,7 +120,9 @@ export class ForkHandler<T> extends RPCTransmitLayer {
       console.error(`CLUSTER [${this.name} ${process.pid}] Fork died with code ${signal}, will be restarted`)
       this.fork()
       await this.init()
+      this.emit(WORKER_RESTARTED, this)
     } else {
+      this.emit(WORKER_DIED, this)
       console.error(`CLUSTER [${this.name} ${process.pid}] Fork died with code ${signal}.`)
     }
   }

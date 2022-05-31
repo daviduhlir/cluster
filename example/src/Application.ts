@@ -1,4 +1,4 @@
-import { Cluster, WORKER_INITIALIZED } from '@david.uhlir/cluster'
+import { Cluster, ForkHandler, WORKER_INITIALIZED } from '@david.uhlir/cluster'
 import { Worker } from './Workers/Worker'
 
 /**
@@ -12,6 +12,7 @@ export const workers = Cluster.Initialize({
  * Master application
  */
 export class ApplicationMaster {
+  protected handlers: {[name: string]: ForkHandler<any>} = {}
   constructor() {
     this.initialize()
   }
@@ -20,17 +21,20 @@ export class ApplicationMaster {
    * Initialize workers
    */
   protected async initialize() {
-    const handle1 = await workers.run.main('test1')
+    this.handlers = {
+      main1: await workers.run.main('test1'),
+      main2: await workers.run.main('test2'),
+    }
 
-    await handle1.call.test()
-    handle1.on(WORKER_INITIALIZED, () => handle1.call.test())
+    await this.handlers.main1.call.test()
 
-    setTimeout(async () => {
+    // freeze test
+    /*setTimeout(async () => {
       console.log('Calling freeze')
       try {
-        await handle1.call.freeze()
+        await this.handlers.main1.call.freeze()
       } catch (e) {}
-    }, 1000)
+    }, 1000)*/
   }
 
   /**
@@ -38,5 +42,13 @@ export class ApplicationMaster {
    */
   public async pong() {
     console.log('hello world received on master')
+  }
+
+  /**
+   * Simple proxy method, that will allows you to send message from worker to worker
+   */
+  public async proxy(target: string, method: string, args: any[]) {
+    const forks = workers.getRunningForks(target)
+    return Promise.all(forks.map(i => i.call[method](...args)))
   }
 }

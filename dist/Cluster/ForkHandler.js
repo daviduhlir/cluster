@@ -4,6 +4,8 @@ const RPCTransmitLayer_1 = require("../RPC/RPCTransmitLayer");
 const cluster = require("cluster");
 const ClusterHolder_1 = require("../utils/ClusterHolder");
 exports.WORKER_INITIALIZED = 'WORKER_INITIALIZED';
+exports.WORKER_DIED = 'WORKER_DIED';
+exports.WORKER_RESTARTED = 'WORKER_RESTARTED';
 exports.forkDefaultConfig = {
     PING_INTERVAL: 5000,
     PING_MAX_TIME: 1000,
@@ -22,8 +24,10 @@ class ForkHandler extends RPCTransmitLayer_1.RPCTransmitLayer {
                 console.error(`CLUSTER [${this.name} ${process.pid}] Fork died with code ${signal}, will be restarted`);
                 this.fork();
                 await this.init();
+                this.emit(exports.WORKER_RESTARTED, this);
             }
             else {
+                this.emit(exports.WORKER_DIED, this);
                 console.error(`CLUSTER [${this.name} ${process.pid}] Fork died with code ${signal}.`);
             }
         };

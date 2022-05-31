@@ -1,5 +1,7 @@
 import { RPCTransmitLayer } from '../RPC/RPCTransmitLayer';
 export declare const WORKER_INITIALIZED = "WORKER_INITIALIZED";
+export declare const WORKER_DIED = "WORKER_DIED";
+export declare const WORKER_RESTARTED = "WORKER_RESTARTED";
 export interface ForkConfig {
     PING_INTERVAL?: number;
     PING_MAX_TIME?: number;
@@ -15,7 +17,7 @@ export interface WorkerSystemHandler {
     PING: () => Promise<number>;
 }
 export declare class ForkHandler<T> extends RPCTransmitLayer {
-    protected readonly name: string;
+    readonly name: string;
     protected readonly args: any[];
     readonly config: ForkConfig;
     protected isLiving: boolean;
