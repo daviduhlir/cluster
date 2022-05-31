@@ -5,12 +5,12 @@ import { ClusterHolder, CLUSTER_CHANGED } from '../utils/ClusterHolder'
  * Receiver layer is responder for RPC.
  * This is basicaly, where all methods will be executed, when it's received from transmit layer.
  */
-export class RPCReceiverLayer {
+export class RPCReceiverLayer<T extends Object = {}> {
   /**
    * @param handlers map of methods, that can be called from outside
    * @param process what you are listening, you can attach more by calling attach method
    */
-  constructor(protected readonly handlers: { [name: string]: (...args: any[]) => Promise<any> }) {
+  constructor(protected readonly receiver: T) {
     if (cluster.isMaster) {
       ClusterHolder.emitter.on(CLUSTER_CHANGED, this.onClusterChange)
     } else {
@@ -34,11 +34,14 @@ export class RPCReceiverLayer {
    */
   protected handleIncommingMessage = async message => {
     // init worker
-    if (message.RPC_MESSAGE && message.CALL_METHOD && this.handlers?.[message.CALL_METHOD]) {
+    if (message.RPC_MESSAGE &&
+        message.CALL_METHOD &&
+        typeof this.receiver[message.CALL_METHOD] === 'function'
+      ) {
       const sender = message.WORKER === 'master' ? process : cluster.workers[message.WORKER]
 
       try {
-        const result = await this.handlers[message.CALL_METHOD](...message.args)
+        const result = await this.receiver[message.CALL_METHOD](...message.args)
         sender.send({
           RPC_MESSAGE: message.RPC_MESSAGE,
           CALL_METHOD: message.CALL_METHOD,

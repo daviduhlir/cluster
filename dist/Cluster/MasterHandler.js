@@ -4,23 +4,26 @@ const RPCTransmitLayer_1 = require("../RPC/RPCTransmitLayer");
 const RPCReceiverLayer_1 = require("../RPC/RPCReceiverLayer");
 const cluster = require("cluster");
 class MasterHandler {
-    constructor(handlers) {
-        this.handlers = handlers;
+    constructor(receiverFactory) {
         this.receiverLayer = null;
         this.transmitLayer = null;
         if (cluster.isMaster) {
-            this.receiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer(handlers);
+            this.receiver = receiverFactory();
+            this.receiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer(this.receiver);
         }
         else {
             this.transmitLayer = new RPCTransmitLayer_1.RPCTransmitLayer(process);
         }
     }
-    static Initialize(initializators) {
-        if (MasterHandler.alreadyInitialized) {
+    static Initialize(receiverFactory) {
+        if (MasterHandler.createdInstance) {
             throw new Error(`Master handler can be initialized only once.`);
         }
-        MasterHandler.alreadyInitialized = true;
-        return new MasterHandler(initializators);
+        MasterHandler.createdInstance = new MasterHandler(receiverFactory);
+        return MasterHandler.createdInstance;
+    }
+    static getInstance() {
+        return MasterHandler.createdInstance;
     }
     get call() {
         if (!cluster.isMaster) {
@@ -30,5 +33,5 @@ class MasterHandler {
     }
 }
 exports.MasterHandler = MasterHandler;
-MasterHandler.alreadyInitialized = false;
+MasterHandler.createdInstance = null;
 //# sourceMappingURL=MasterHandler.js.map

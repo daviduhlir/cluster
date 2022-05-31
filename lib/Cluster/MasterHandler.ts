@@ -1,27 +1,32 @@
 import { RPCTransmitLayer } from '../RPC/RPCTransmitLayer'
 import { RPCReceiverLayer } from '../RPC/RPCReceiverLayer'
-import { HandlersMap } from '../utils/types'
 import * as cluster from 'cluster'
 
 /**
  * Master process receiver
  */
-export class MasterHandler<T extends HandlersMap> {
-  protected static alreadyInitialized: boolean = false
+export class MasterHandler<T extends Object> {
+  protected static createdInstance: MasterHandler<any> = null
   protected receiverLayer: RPCReceiverLayer = null
   protected transmitLayer: RPCTransmitLayer = null
+  protected receiver: T
 
-  public static Initialize<T extends HandlersMap>(initializators: T): MasterHandler<T> {
-    if (MasterHandler.alreadyInitialized) {
+  public static Initialize<T extends Object>(receiverFactory: () => T): MasterHandler<T> {
+    if (MasterHandler.createdInstance) {
       throw new Error(`Master handler can be initialized only once.`)
     }
-    MasterHandler.alreadyInitialized = true
-    return new MasterHandler(initializators)
+    MasterHandler.createdInstance = new MasterHandler(receiverFactory)
+    return MasterHandler.createdInstance
   }
 
-  protected constructor(protected readonly handlers: T) {
+  public static getInstance<T extends Object>(): MasterHandler<T> {
+    return MasterHandler.createdInstance
+  }
+
+  protected constructor(receiverFactory: () => T) {
     if (cluster.isMaster) {
-      this.receiverLayer = new RPCReceiverLayer(handlers)
+      this.receiver = receiverFactory()
+      this.receiverLayer = new RPCReceiverLayer(this.receiver)
     } else {
       this.transmitLayer = new RPCTransmitLayer(process)
     }

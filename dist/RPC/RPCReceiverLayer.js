@@ -3,17 +3,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cluster = require("cluster");
 const ClusterHolder_1 = require("../utils/ClusterHolder");
 class RPCReceiverLayer {
-    constructor(handlers) {
-        this.handlers = handlers;
+    constructor(receiver) {
+        this.receiver = receiver;
         this.onClusterChange = ({ oldWorkers, newWorkers }) => {
             oldWorkers.forEach(w => w.removeListener('message', this.handleIncommingMessage));
             newWorkers.forEach(w => w.addListener('message', this.handleIncommingMessage));
         };
         this.handleIncommingMessage = async (message) => {
-            if (message.RPC_MESSAGE && message.CALL_METHOD && this.handlers?.[message.CALL_METHOD]) {
+            if (message.RPC_MESSAGE &&
+                message.CALL_METHOD &&
+                typeof this.receiver[message.CALL_METHOD] === 'function') {
                 const sender = message.WORKER === 'master' ? process : cluster.workers[message.WORKER];
                 try {
-                    const result = await this.handlers[message.CALL_METHOD](...message.args);
+                    const result = await this.receiver[message.CALL_METHOD](...message.args);
                     sender.send({
                         RPC_MESSAGE: message.RPC_MESSAGE,
                         CALL_METHOD: message.CALL_METHOD,
