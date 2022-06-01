@@ -5,7 +5,9 @@
   "main": "./build/index.js",
   "scripts": {
     "build": "rimraf ./build && tsc",
-    "start": "npm run build && node --enable-source-maps ./build/index.js",
+    "start:complex": "npm run build && node --enable-source-maps ./build/complex.js",
+    "start:simple": "npm run build && node --enable-source-maps ./build/simple.js",
+    "start": "npm run start:simple",
     "inspect": "npm run build && node --enable-source-maps --inspect ./build/index.js"
   },
   "author": "David Uhlíř",

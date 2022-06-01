@@ -22,16 +22,7 @@ export class ApplicationMaster {
   protected async initialize() {
     const handler1 = await workers.run.main('test1')
     const handler2 = await workers.run.main('test2')
-
     await handler1.call.test()
-
-    // freeze test
-    /*setTimeout(async () => {
-      console.log('Calling freeze')
-      try {
-        await this.handlers.main1.call.freeze()
-      } catch (e) {}
-    }, 1000)*/
   }
 
   /**
@@ -43,6 +34,8 @@ export class ApplicationMaster {
 
   /**
    * Simple proxy method, that will allows you to send message from worker to worker
+   *
+   * It's not used in this example, but it's there to see, how this things should works
    */
   public async proxy(target: string, method: string, args: any[]) {
     const forks = workers.getRunningForks(target)

@@ -5,15 +5,10 @@ const RPCReceiverLayer_1 = require("../RPC/RPCReceiverLayer");
 const cluster = require("cluster");
 class MasterHandler {
     constructor(receiverFactory) {
+        this.receiverFactory = receiverFactory;
         this.receiverLayer = null;
         this.transmitLayer = null;
-        if (cluster.isMaster) {
-            this.receiver = receiverFactory();
-            this.receiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer(this.receiver);
-        }
-        else {
-            this.transmitLayer = new RPCTransmitLayer_1.RPCTransmitLayer(process);
-        }
+        this.initialize();
     }
     static Initialize(receiverFactory) {
         if (MasterHandler.createdInstance) {
@@ -24,6 +19,15 @@ class MasterHandler {
     }
     static getInstance() {
         return MasterHandler.createdInstance;
+    }
+    async initialize() {
+        if (cluster.isMaster) {
+            this.receiver = await this.receiverFactory();
+            this.receiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer(this.receiver || {});
+        }
+        else {
+            this.transmitLayer = new RPCTransmitLayer_1.RPCTransmitLayer(process);
+        }
     }
     get call() {
         if (!cluster.isMaster) {

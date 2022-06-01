@@ -11,7 +11,7 @@ export class MasterHandler<T extends Object> {
   protected transmitLayer: RPCTransmitLayer = null
   protected receiver: T
 
-  public static Initialize<T extends Object>(receiverFactory: () => T): MasterHandler<T> {
+  public static Initialize<T extends Object>(receiverFactory: () => Promise<T> | T): MasterHandler<T> {
     if (MasterHandler.createdInstance) {
       throw new Error(`Master handler can be initialized only once.`)
     }
@@ -23,10 +23,14 @@ export class MasterHandler<T extends Object> {
     return MasterHandler.createdInstance
   }
 
-  protected constructor(receiverFactory: () => T) {
+  protected constructor(protected readonly receiverFactory: () => Promise<T> | T) {
+    this.initialize()
+  }
+
+  protected async initialize() {
     if (cluster.isMaster) {
-      this.receiver = receiverFactory()
-      this.receiverLayer = new RPCReceiverLayer(this.receiver)
+      this.receiver = await this.receiverFactory()
+      this.receiverLayer = new RPCReceiverLayer(this.receiver || {})
     } else {
       this.transmitLayer = new RPCTransmitLayer(process)
     }
