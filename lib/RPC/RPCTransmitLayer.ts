@@ -51,30 +51,24 @@ export class RPCTransmitLayer extends EventEmitter {
 
   /**
    * Call method on receiver and resutrns first valid result
-   * @param methodName
-   * @param args
-   * @returns
    */
   protected async callMethodWithFirstResult(methodName: string, args: any[]): Promise<any> {
     const results = await this.callMethod(methodName, args)
     const success = results.find(i => i.CALL_STATUS === 'METHOD_CALL_SUCCESS')
-      if (success) {
-        return success.result
+    if (success) {
+      return success.result
+    } else {
+      const error = results.find(i => i.CALL_STATUS === 'METHOD_CALL_ERROR')
+      if (error) {
+        throw new Error(error.error || 'unknown error')
       } else {
-        const error = results.find(i => i.CALL_STATUS === 'METHOD_CALL_ERROR')
-        if (error) {
-          throw new Error(error.error || 'unknown error')
-        } else {
-          throw new Error('METHOD_CALL_FAILED')
-        }
+        throw new Error('METHOD_CALL_FAILED')
       }
+    }
   }
 
   /**
    * Call method on receiver
-   * @param methodName
-   * @param args
-   * @returns
    */
   protected async callMethod(methodName: string, args: any[]): Promise<{result?: any; error?: any; CALL_STATUS: string}[]> {
     if (!this.process) {

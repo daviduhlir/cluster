@@ -2,10 +2,10 @@
 import * as cluster from 'cluster';
 export declare class RPCReceiverLayer<T extends Object = {}> {
     protected readonly receiver: T;
-    static receivers: {
+    protected static receivers: {
         [hash: string]: RPCReceiverLayer<any>;
     };
-    static attached: boolean;
+    protected static attached: boolean;
     protected receiverHash: string;
     constructor(receiver: T);
     destroy(): void;

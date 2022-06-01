@@ -1,6 +1,5 @@
 import * as cluster from 'cluster'
 import { ClusterHolder, CLUSTER_CHANGED } from '../utils/ClusterHolder'
-import { ProcessType } from '../utils/types'
 import { randomHash } from '../utils/utils'
 
 /**
@@ -8,8 +7,8 @@ import { randomHash } from '../utils/utils'
  * This is basicaly, where all methods will be executed, when it's received from transmit layer.
  */
 export class RPCReceiverLayer<T extends Object = {}> {
-  public static receivers: {[hash: string]: RPCReceiverLayer<any>} = {}
-  public static attached: boolean = false
+  protected static receivers: {[hash: string]: RPCReceiverLayer<any>} = {}
+  protected static attached: boolean = false
 
   protected receiverHash: string
 
@@ -53,9 +52,14 @@ export class RPCReceiverLayer<T extends Object = {}> {
     return this.receiver[name](...args)
   }
 
+  /*********************************
+   *
+   * Static methods to handle incomming messages
+   *
+   *********************************/
+
   /**
    * Reattach all listeners
-   * @param param0
    */
   protected static onClusterChange({oldWorkers, newWorkers}: {oldWorkers: cluster.Worker[], newWorkers: cluster.Worker[]}) {
     oldWorkers.forEach(w => w.removeListener('message', RPCReceiverLayer.handleIncommingMessage))
@@ -71,8 +75,6 @@ export class RPCReceiverLayer<T extends Object = {}> {
 
   /**
    * Internal message handler
-   * @param sender
-   * @param message
    */
   protected static async handleIncommingMessage(message) {
     if (message.RPC_MESSAGE &&
@@ -83,8 +85,8 @@ export class RPCReceiverLayer<T extends Object = {}> {
 
       const results: {result?: any; error?: any}[] = await Promise.all(RPCReceiverLayer.getReceivers()
         .filter(receiver => receiver.hasMethod(message.CALL_METHOD))
-        .map(receiver => {
-          return receiver.callMethod(message.CALL_METHOD, message.args)
+        .map(receiver =>
+          receiver.callMethod(message.CALL_METHOD, message.args)
             .then(result => ({
               CALL_STATUS: 'METHOD_CALL_SUCCESS',
               result
@@ -92,7 +94,7 @@ export class RPCReceiverLayer<T extends Object = {}> {
               CALL_STATUS: 'METHOD_CALL_ERROR',
               error
             }))
-        }))
+        ))
 
       if (results.length === 0) {
         sender.send({

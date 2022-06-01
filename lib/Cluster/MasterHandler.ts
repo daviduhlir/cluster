@@ -3,7 +3,7 @@ import { RPCReceiverLayer } from '../RPC/RPCReceiverLayer'
 import * as cluster from 'cluster'
 
 /**
- * Master process receiver
+ * Master process receiver/transmitter
  */
 export class MasterHandler<T extends Object> {
   protected static createdInstance: MasterHandler<any> = null

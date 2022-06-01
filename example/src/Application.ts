@@ -1,4 +1,4 @@
-import { Cluster, ForkHandler, WORKER_INITIALIZED } from '@david.uhlir/cluster'
+import { Cluster } from '@david.uhlir/cluster'
 import { Worker } from './Workers/Worker'
 
 /**
@@ -12,7 +12,6 @@ export const workers = Cluster.Initialize({
  * Master application
  */
 export class ApplicationMaster {
-  protected handlers: {[name: string]: ForkHandler<any>} = {}
   constructor() {
     this.initialize()
   }
@@ -21,12 +20,10 @@ export class ApplicationMaster {
    * Initialize workers
    */
   protected async initialize() {
-    this.handlers = {
-      main1: await workers.run.main('test1'),
-      main2: await workers.run.main('test2'),
-    }
+    const handler1 = await workers.run.main('test1')
+    const handler2 = await workers.run.main('test2')
 
-    await this.handlers.main1.call.test()
+    await handler1.call.test()
 
     // freeze test
     /*setTimeout(async () => {

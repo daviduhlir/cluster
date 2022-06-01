@@ -1,3 +1,6 @@
+/**
+ * Creates random hash
+ */
 export function randomHash(): string {
   return [...Array(10)]
     .map(x => 0)

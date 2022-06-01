@@ -41,16 +41,14 @@ class RPCReceiverLayer {
             const sender = message.WORKER === 'master' ? process : cluster.workers[message.WORKER];
             const results = await Promise.all(RPCReceiverLayer.getReceivers()
                 .filter(receiver => receiver.hasMethod(message.CALL_METHOD))
-                .map(receiver => {
-                return receiver.callMethod(message.CALL_METHOD, message.args)
-                    .then(result => ({
-                    CALL_STATUS: 'METHOD_CALL_SUCCESS',
-                    result
-                }), error => ({
-                    CALL_STATUS: 'METHOD_CALL_ERROR',
-                    error
-                }));
-            }));
+                .map(receiver => receiver.callMethod(message.CALL_METHOD, message.args)
+                .then(result => ({
+                CALL_STATUS: 'METHOD_CALL_SUCCESS',
+                result
+            }), error => ({
+                CALL_STATUS: 'METHOD_CALL_ERROR',
+                error
+            }))));
             if (results.length === 0) {
                 sender.send({
                     RPC_MESSAGE: message.RPC_MESSAGE,
