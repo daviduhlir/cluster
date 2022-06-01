@@ -1,7 +1,6 @@
 /// <reference types="node" />
-import * as cluster from 'cluster';
 import { EventEmitter } from 'events';
-export declare type ProcessType = NodeJS.Process | cluster.Worker;
+import { ProcessType } from '../utils/types';
 export declare const PROCESS_CHANGED = "PROCESS_CHANGED";
 export declare class RPCTransmitLayer extends EventEmitter {
     protected processHandler: ProcessType;
@@ -9,6 +8,11 @@ export declare class RPCTransmitLayer extends EventEmitter {
     set process(process: ProcessType);
     get process(): ProcessType;
     as<T>(): T;
-    protected callMethod(methodName: string, args: any[]): Promise<any>;
+    protected callMethodWithFirstResult(methodName: string, args: any[]): Promise<any>;
+    protected callMethod(methodName: string, args: any[]): Promise<{
+        result?: any;
+        error?: any;
+        CALL_STATUS: string;
+    }[]>;
     protected sendRaw(message: any): void;
 }

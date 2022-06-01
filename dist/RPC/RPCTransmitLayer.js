@@ -23,8 +23,24 @@ class RPCTransmitLayer extends events_1.EventEmitter {
     }
     as() {
         return new Proxy(this, {
-            get: (target, propKey, receiver) => (...args) => this.callMethod(propKey.toString(), args),
+            get: (target, propKey, receiver) => (...args) => this.callMethodWithFirstResult(propKey.toString(), args),
         });
+    }
+    async callMethodWithFirstResult(methodName, args) {
+        const results = await this.callMethod(methodName, args);
+        const success = results.find(i => i.CALL_STATUS === 'METHOD_CALL_SUCCESS');
+        if (success) {
+            return success.result;
+        }
+        else {
+            const error = results.find(i => i.CALL_STATUS === 'METHOD_CALL_ERROR');
+            if (error) {
+                throw new Error(error.error || 'unknown error');
+            }
+            else {
+                throw new Error('METHOD_CALL_FAILED');
+            }
+        }
     }
     async callMethod(methodName, args) {
         if (!this.process) {
@@ -44,12 +60,7 @@ class RPCTransmitLayer extends events_1.EventEmitter {
                     message.RPC_MESSAGE === hash) {
                     this.process.removeListener('message', messageHandler);
                     this.removeListener(exports.PROCESS_CHANGED, processDieHandler);
-                    if (message.error) {
-                        reject(new Error(message.error));
-                    }
-                    else {
-                        resolve(message.result);
-                    }
+                    resolve(message.results);
                 }
             };
             this.process.addListener('message', messageHandler);

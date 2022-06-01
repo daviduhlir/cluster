@@ -1,8 +1,7 @@
 import * as cluster from 'cluster'
 import { randomHash } from '../utils/utils'
 import { EventEmitter } from 'events'
-
-export type ProcessType = NodeJS.Process | cluster.Worker
+import { ProcessType } from '../utils/types'
 
 export const PROCESS_CHANGED = 'PROCESS_CHANGED'
 
@@ -46,11 +45,29 @@ export class RPCTransmitLayer extends EventEmitter {
    */
   public as<T>(): T {
     return new Proxy(this as any, {
-      get:
-        (target, propKey, receiver) =>
-        (...args) =>
-          this.callMethod(propKey.toString(), args),
+      get: (target, propKey, receiver) => (...args) => this.callMethodWithFirstResult(propKey.toString(), args),
     })
+  }
+
+  /**
+   * Call method on receiver and resutrns first valid result
+   * @param methodName
+   * @param args
+   * @returns
+   */
+  protected async callMethodWithFirstResult(methodName: string, args: any[]): Promise<any> {
+    const results = await this.callMethod(methodName, args)
+    const success = results.find(i => i.CALL_STATUS === 'METHOD_CALL_SUCCESS')
+      if (success) {
+        return success.result
+      } else {
+        const error = results.find(i => i.CALL_STATUS === 'METHOD_CALL_ERROR')
+        if (error) {
+          throw new Error(error.error || 'unknown error')
+        } else {
+          throw new Error('METHOD_CALL_FAILED')
+        }
+      }
   }
 
   /**
@@ -59,7 +76,7 @@ export class RPCTransmitLayer extends EventEmitter {
    * @param args
    * @returns
    */
-  protected async callMethod(methodName: string, args: any[]): Promise<any> {
+  protected async callMethod(methodName: string, args: any[]): Promise<{result?: any; error?: any; CALL_STATUS: string}[]> {
     if (!this.process) {
       throw new Error('Target process is not set.')
     }
@@ -83,12 +100,7 @@ export class RPCTransmitLayer extends EventEmitter {
         ) {
           this.process.removeListener('message', messageHandler)
           this.removeListener(PROCESS_CHANGED, processDieHandler)
-
-          if (message.error) {
-            reject(new Error(message.error))
-          } else {
-            resolve(message.result)
-          }
+          resolve(message.results)
         }
       }
       this.process.addListener('message', messageHandler)
