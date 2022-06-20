@@ -1,5 +1,4 @@
-import { RPCTransmitLayer } from '../RPC/RPCTransmitLayer'
-import { RPCReceiverLayer } from '../RPC/RPCReceiverLayer'
+import { AsObject, IpcMethodHandler } from '@david.uhlir/ipc-method'
 import * as cluster from 'cluster'
 
 /**
@@ -7,8 +6,7 @@ import * as cluster from 'cluster'
  */
 export class MasterHandler<T extends Object> {
   protected static createdInstance: MasterHandler<any> = null
-  protected receiverLayer: RPCReceiverLayer = null
-  protected transmitLayer: RPCTransmitLayer = null
+  protected methodHandler: IpcMethodHandler = null
   protected receiver: T
 
   public static Initialize<T extends Object>(receiverFactory: () => Promise<T> | T): MasterHandler<T> {
@@ -30,18 +28,18 @@ export class MasterHandler<T extends Object> {
   protected async initialize() {
     if (cluster.isMaster) {
       this.receiver = await this.receiverFactory()
-      this.receiverLayer = new RPCReceiverLayer(this.receiver || {})
+      this.methodHandler = new IpcMethodHandler(['cluster-master-user'], this.receiver || {} as any)
     } else {
-      this.transmitLayer = new RPCTransmitLayer(process)
+      this.methodHandler = new IpcMethodHandler(['cluster-master-user'])
     }
   }
 
   /**
    * Call something to master process.
    */
-  public get call(): T {
+  public get tx(): AsObject<T> {
     if (!cluster.isMaster) {
-      return this.transmitLayer.as<T>()
+      return this.methodHandler.as<T>()
     }
     return null
   }

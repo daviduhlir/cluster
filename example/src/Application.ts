@@ -22,7 +22,7 @@ export class ApplicationMaster {
   protected async initialize() {
     const handler1 = await workers.run.main('test1')
     const handler2 = await workers.run.main('test2')
-    await handler1.call.test()
+    await handler1.tx.test()
   }
 
   /**

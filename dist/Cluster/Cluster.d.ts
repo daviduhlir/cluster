@@ -1,4 +1,4 @@
-import { RPCReceiverLayer } from '../RPC/RPCReceiverLayer';
+import { IpcMethodHandler } from '@david.uhlir/ipc-method';
 import { HandlersMap, ArgumentTypes, Await } from '../utils/types';
 import { ForkHandler } from './ForkHandler';
 export declare class Cluster<T extends HandlersMap> {
@@ -7,8 +7,8 @@ export declare class Cluster<T extends HandlersMap> {
     protected runningHandlers: {
         [name: string]: ForkHandler<any>[];
     };
-    protected systemReceiverLayer: RPCReceiverLayer;
-    protected receiverLayer: RPCReceiverLayer;
+    protected systemReceiverLayer: IpcMethodHandler;
+    protected receiverLayer: IpcMethodHandler;
     static Initialize<T extends HandlersMap>(initializators: T): Cluster<T>;
     protected constructor(initializators: T);
     get run(): {

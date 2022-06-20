@@ -10,7 +10,7 @@ export class Worker {
 
   public test() {
     console.log('Hello world from RPC', process.pid)
-    setTimeout(() => this.master.call.pong(), 1000)
+    setTimeout(() => this.master.tx.pong(), 1000)
   }
 
   public freeze() {

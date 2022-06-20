@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const RPCReceiverLayer_1 = require("../RPC/RPCReceiverLayer");
+exports.Cluster = void 0;
+const ipc_method_1 = require("@david.uhlir/ipc-method");
 const cluster = require("cluster");
 const ForkHandler_1 = require("./ForkHandler");
 class Cluster {
@@ -14,14 +15,14 @@ class Cluster {
                 throw new Error('Worker was already initialized.');
             }
             if (this.initializators[name]) {
-                this.receiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer(await this.initializators[name](...args));
+                this.receiverLayer = new ipc_method_1.IpcMethodHandler(['cluster-fork-user'], await this.initializators[name](...args));
                 return;
             }
             throw new Error(`Worker with name ${name} does not exists.`);
         };
         this.ping = async () => Date.now();
-        if (!cluster.isMaster) {
-            this.systemReceiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer({
+        if (cluster.isWorker) {
+            this.systemReceiverLayer = new ipc_method_1.IpcMethodHandler(['cluster-internal'], {
                 INITIALIZE_WORKER: this.initializeWorker,
                 PING: this.ping,
             });

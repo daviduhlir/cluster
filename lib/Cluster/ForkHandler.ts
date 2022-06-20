@@ -1,10 +1,13 @@
-import { RPCTransmitLayer } from '../RPC/RPCTransmitLayer'
+import { IpcMethodHandler } from '@david.uhlir/ipc-method'
 import * as cluster from 'cluster'
 import { ClusterHolder } from '../utils/ClusterHolder'
+import { ProcessType } from '../utils/types'
 
 export const WORKER_INITIALIZED = 'WORKER_INITIALIZED'
 export const WORKER_DIED = 'WORKER_DIED'
 export const WORKER_RESTARTED = 'WORKER_RESTARTED'
+
+export const PROCESS_CHANGED = 'PROCESS_CHANGED'
 
 /**
  * Fork configuration
@@ -29,16 +32,19 @@ export interface WorkerSystemHandler {
 /**
  * Fork handler for main worker to call fork functions
  */
-export class ForkHandler<T> extends RPCTransmitLayer {
+export class ForkHandler<T> extends IpcMethodHandler {
   protected isLiving = true
   protected pingInterval: any = null
+  protected processHandler: ProcessType
+
+  protected internalIpcTx: IpcMethodHandler = new IpcMethodHandler(['cluster-internal'])
 
   constructor(
     public readonly name: string,
     protected readonly args: any[],
     public readonly config: ForkConfig = forkDefaultConfig,
   ) {
-    super()
+    super(['cluster-fork-user'])
     this.fork()
   }
 
@@ -50,7 +56,9 @@ export class ForkHandler<T> extends RPCTransmitLayer {
       if (!this.isLiving) {
         throw new Error(`You can't call init on worker, that is no longer living.`)
       }
-      await this.as<WorkerSystemHandler>().INITIALIZE_WORKER(this.name, this.args)
+
+      await this.internalIpcTx.as<WorkerSystemHandler>().INITIALIZE_WORKER(this.name, this.args)
+
 
       // TODO, this hack is here, because when you will attach to this event after starting of cluster
       // you will not receive it (this method is part of init process, and this event will be emitted before end of promise)
@@ -63,7 +71,7 @@ export class ForkHandler<T> extends RPCTransmitLayer {
   /**
    * Get handler, what you can call
    */
-  public get call(): T {
+  public get tx() {
     if (!this.isLiving) {
       throw new Error(`You can't call methods on worker, that is no longer living.`)
     }
@@ -98,6 +106,35 @@ export class ForkHandler<T> extends RPCTransmitLayer {
     console.log(`CLUSTER [${this.name} ${process.pid}] Call fork force restart`)
     ;(this.process as cluster.Worker).process.kill('SIGKILL')
     this.stopPing()
+  }
+
+  /**
+   * Set process
+   */
+   public set process(process: ProcessType) {
+    this.emit(PROCESS_CHANGED, {
+      oldProcess: this.processHandler,
+      newProcess: process,
+    })
+    this.processHandler = process
+  }
+
+  /**
+   * Get process
+   */
+  public get process(): ProcessType {
+    return this.processHandler
+  }
+
+  /**
+   * Get all avaliable processes
+   */
+  protected get processes(): (NodeJS.Process | cluster.Worker)[] {
+    if (cluster.isWorker) {
+      throw new Error('Fork handler is designed only for master process.')
+    } else {
+      return [this.processHandler]
+    }
   }
 
   /**
@@ -165,7 +202,7 @@ export class ForkHandler<T> extends RPCTransmitLayer {
       }, this.config.PING_MAX_TIME)
 
       try {
-        await this.as<WorkerSystemHandler>().PING()
+        await this.internalIpcTx.as<WorkerSystemHandler>().PING()
       } catch (e) {}
 
       clearTimeout(killTimeout)

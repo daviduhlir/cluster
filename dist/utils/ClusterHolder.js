@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ClusterHolder = exports.CLUSTER_CHANGED = void 0;
 const cluster = require("cluster");
 const events_1 = require("events");
 exports.CLUSTER_CHANGED = 'CLUSTER_CHANGED';

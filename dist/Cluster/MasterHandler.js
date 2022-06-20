@@ -1,13 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const RPCTransmitLayer_1 = require("../RPC/RPCTransmitLayer");
-const RPCReceiverLayer_1 = require("../RPC/RPCReceiverLayer");
+exports.MasterHandler = void 0;
+const ipc_method_1 = require("@david.uhlir/ipc-method");
 const cluster = require("cluster");
 class MasterHandler {
     constructor(receiverFactory) {
         this.receiverFactory = receiverFactory;
-        this.receiverLayer = null;
-        this.transmitLayer = null;
+        this.methodHandler = null;
         this.initialize();
     }
     static Initialize(receiverFactory) {
@@ -23,15 +22,15 @@ class MasterHandler {
     async initialize() {
         if (cluster.isMaster) {
             this.receiver = await this.receiverFactory();
-            this.receiverLayer = new RPCReceiverLayer_1.RPCReceiverLayer(this.receiver || {});
+            this.methodHandler = new ipc_method_1.IpcMethodHandler(['cluster-master-user'], this.receiver || {});
         }
         else {
-            this.transmitLayer = new RPCTransmitLayer_1.RPCTransmitLayer(process);
+            this.methodHandler = new ipc_method_1.IpcMethodHandler(['cluster-master-user']);
         }
     }
-    get call() {
+    get tx() {
         if (!cluster.isMaster) {
-            return this.transmitLayer.as();
+            return this.methodHandler.as();
         }
         return null;
     }

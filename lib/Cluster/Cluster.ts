@@ -1,4 +1,4 @@
-import { RPCReceiverLayer } from '../RPC/RPCReceiverLayer'
+import { IpcMethodHandler } from '@david.uhlir/ipc-method'
 import * as cluster from 'cluster'
 import { HandlersMap, ArgumentTypes, Await } from '../utils/types'
 import { ForkHandler, WORKER_DIED } from './ForkHandler'
@@ -10,8 +10,8 @@ export class Cluster<T extends HandlersMap> {
   protected static alreadyInitialized: boolean = false
   protected runningHandlers: {[name: string]: ForkHandler<any>[]} = {}
 
-  protected systemReceiverLayer: RPCReceiverLayer = null
-  protected receiverLayer: RPCReceiverLayer = null
+  protected systemReceiverLayer: IpcMethodHandler = null
+  protected receiverLayer: IpcMethodHandler = null
 
   public static Initialize<T extends HandlersMap>(initializators: T): Cluster<T> {
     if (Cluster.alreadyInitialized) {
@@ -28,8 +28,8 @@ export class Cluster<T extends HandlersMap> {
    * @param handlers this is handler on master process, which can be called from forks.
    */
   protected constructor(protected readonly initializators: T) {
-    if (!cluster.isMaster) {
-      this.systemReceiverLayer = new RPCReceiverLayer({
+    if (cluster.isWorker) {
+      this.systemReceiverLayer = new IpcMethodHandler(['cluster-internal'] ,{
         INITIALIZE_WORKER: this.initializeWorker,
         PING: this.ping,
       })
@@ -85,7 +85,7 @@ export class Cluster<T extends HandlersMap> {
     }
 
     if (this.initializators[name]) {
-      this.receiverLayer = new RPCReceiverLayer(await this.initializators[name](...args))
+      this.receiverLayer = new IpcMethodHandler(['cluster-fork-user'], await this.initializators[name](...args))
       return
     }
     throw new Error(`Worker with name ${name} does not exists.`)
