@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ForkHandler = exports.forkDefaultConfig = exports.PROCESS_CHANGED = exports.WORKER_RESTARTED = exports.WORKER_DIED = exports.WORKER_INITIALIZED = void 0;
 const ipc_method_1 = require("@david.uhlir/ipc-method");
 const cluster = require("cluster");
-const ClusterHolder_1 = require("../utils/ClusterHolder");
 exports.WORKER_INITIALIZED = 'WORKER_INITIALIZED';
 exports.WORKER_DIED = 'WORKER_DIED';
 exports.WORKER_RESTARTED = 'WORKER_RESTARTED';
@@ -96,7 +95,7 @@ class ForkHandler extends ipc_method_1.IpcMethodHandler {
         if (this.process) {
             this.process.removeListener('exit', this.handleStop);
         }
-        this.process = ClusterHolder_1.ClusterHolder.fork();
+        this.process = cluster.fork();
         this.resetPing();
         this.process.addListener('exit', this.handleStop);
     }

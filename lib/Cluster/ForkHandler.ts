@@ -1,6 +1,5 @@
 import { IpcMethodHandler } from '@david.uhlir/ipc-method'
 import * as cluster from 'cluster'
-import { ClusterHolder } from '../utils/ClusterHolder'
 import { ProcessType } from '../utils/types'
 
 export const WORKER_INITIALIZED = 'WORKER_INITIALIZED'
@@ -144,7 +143,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
     if (this.process) {
       this.process.removeListener('exit', this.handleStop)
     }
-    this.process = ClusterHolder.fork()
+    this.process = cluster.fork()
     this.resetPing()
     this.process.addListener('exit', this.handleStop)
   }
