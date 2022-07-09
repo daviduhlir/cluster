@@ -50,7 +50,7 @@ class ForkHandler extends ipc_method_1.IpcMethodHandler {
         if (!this.isLiving) {
             throw new Error(`You can't call methods on worker, that is no longer living.`);
         }
-        return this.as();
+        return this.as([this.process]);
     }
     kill() {
         if (!this.isLiving) {
@@ -123,7 +123,7 @@ class ForkHandler extends ipc_method_1.IpcMethodHandler {
                 }
             }, this.config.PING_MAX_TIME);
             try {
-                await this.internalIpcTx.as().PING();
+                await this.internalIpcTx.as([this.process]).PING();
             }
             catch (e) { }
             clearTimeout(killTimeout);

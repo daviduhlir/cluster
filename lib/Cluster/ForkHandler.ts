@@ -58,7 +58,6 @@ export class ForkHandler<T> extends IpcMethodHandler {
 
       await this.internalIpcTx.as<WorkerSystemHandler>([this.process]).INITIALIZE_WORKER(this.name, this.args)
 
-
       // TODO, this hack is here, because when you will attach to this event after starting of cluster
       // you will not receive it (this method is part of init process, and this event will be emitted before end of promise)
       setImmediate(() => this.emit(WORKER_INITIALIZED))
@@ -74,7 +73,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
     if (!this.isLiving) {
       throw new Error(`You can't call methods on worker, that is no longer living.`)
     }
-    return this.as<T>()
+    return this.as<T>([this.process])
   }
 
   /**
@@ -201,7 +200,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
       }, this.config.PING_MAX_TIME)
 
       try {
-        await this.internalIpcTx.as<WorkerSystemHandler>().PING()
+        await this.internalIpcTx.as<WorkerSystemHandler>([this.process]).PING()
       } catch (e) {}
 
       clearTimeout(killTimeout)
