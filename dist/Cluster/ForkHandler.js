@@ -40,7 +40,7 @@ class ForkHandler extends ipc_method_1.IpcMethodHandler {
             if (!this.isLiving) {
                 throw new Error(`You can't call init on worker, that is no longer living.`);
             }
-            await this.internalIpcTx.as().INITIALIZE_WORKER(this.name, this.args);
+            await this.internalIpcTx.as([this.process]).INITIALIZE_WORKER(this.name, this.args);
             setImmediate(() => this.emit(exports.WORKER_INITIALIZED));
             return;
         }

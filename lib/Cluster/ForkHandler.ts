@@ -56,7 +56,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
         throw new Error(`You can't call init on worker, that is no longer living.`)
       }
 
-      await this.internalIpcTx.as<WorkerSystemHandler>().INITIALIZE_WORKER(this.name, this.args)
+      await this.internalIpcTx.as<WorkerSystemHandler>([this.process]).INITIALIZE_WORKER(this.name, this.args)
 
 
       // TODO, this hack is here, because when you will attach to this event after starting of cluster
