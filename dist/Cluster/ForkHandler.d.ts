@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { IpcMethodHandler } from '@david.uhlir/ipc-method';
 import * as cluster from 'cluster';
 import { ProcessType } from '../utils/types';
