@@ -8,6 +8,7 @@ export class MasterHandler<T extends Object> {
   protected static createdInstance: MasterHandler<any> = null
   protected methodHandler: IpcMethodHandler = null
   protected receiver: T
+  protected receiverProxyWraper: AsObject<T> = null
 
   public static Initialize<T extends Object>(receiverFactory: () => Promise<T> | T): MasterHandler<T> {
     if (MasterHandler.createdInstance) {
@@ -29,6 +30,12 @@ export class MasterHandler<T extends Object> {
     if (cluster.isMaster) {
       this.receiver = await this.receiverFactory()
       this.methodHandler = new IpcMethodHandler(['cluster-master-user'], this.receiver || {} as any)
+
+      // just only for calling from master to master
+      this.receiverProxyWraper = new Proxy({} as any, {
+        get: (target, propKey, receiver) => async (...args) => this.receiver[propKey](...args),
+      })
+
     } else {
       this.methodHandler = new IpcMethodHandler(['cluster-master-user'])
     }
@@ -41,6 +48,6 @@ export class MasterHandler<T extends Object> {
     if (!cluster.isMaster) {
       return this.methodHandler.as<T>()
     }
-    return null
+    return this.receiverProxyWraper
   }
 }

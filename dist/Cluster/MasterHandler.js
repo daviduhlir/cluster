@@ -7,6 +7,7 @@ class MasterHandler {
     constructor(receiverFactory) {
         this.receiverFactory = receiverFactory;
         this.methodHandler = null;
+        this.receiverProxyWraper = null;
         this.initialize();
     }
     static Initialize(receiverFactory) {
@@ -23,6 +24,9 @@ class MasterHandler {
         if (cluster.isMaster) {
             this.receiver = await this.receiverFactory();
             this.methodHandler = new ipc_method_1.IpcMethodHandler(['cluster-master-user'], this.receiver || {});
+            this.receiverProxyWraper = new Proxy({}, {
+                get: (target, propKey, receiver) => async (...args) => this.receiver[propKey](...args),
+            });
         }
         else {
             this.methodHandler = new ipc_method_1.IpcMethodHandler(['cluster-master-user']);
@@ -32,7 +36,7 @@ class MasterHandler {
         if (!cluster.isMaster) {
             return this.methodHandler.as();
         }
-        return null;
+        return this.receiverProxyWraper;
     }
 }
 exports.MasterHandler = MasterHandler;
