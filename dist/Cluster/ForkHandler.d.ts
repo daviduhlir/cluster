@@ -31,7 +31,7 @@ export declare class ForkHandler<T> extends IpcMethodHandler {
     protected internalIpcTx: IpcMethodHandler;
     constructor(name: string, args: any[], config?: ForkConfig);
     init(): Promise<void>;
-    get tx(): import("@david.uhlir/ipc-method").AsObject<T>;
+    get tx(): import("@david.uhlir/ipc-method").AsObjectFirstResult<T>;
     kill(): void;
     restart(): void;
     set process(process: ProcessType);
