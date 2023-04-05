@@ -11,6 +11,7 @@ export declare class Cluster<T extends HandlersMap> {
     protected receiverLayer: IpcMethodHandler;
     static Initialize<T extends HandlersMap>(initializators: T): Cluster<T>;
     protected constructor(initializators: T);
+    restart(): void;
     get run(): {
         [K in keyof T]: (...args: ArgumentTypes<T[K]>) => Promise<ForkHandler<Await<ReturnType<T[K]>>>>;
     };

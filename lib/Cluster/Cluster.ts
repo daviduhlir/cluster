@@ -37,6 +37,17 @@ export class Cluster<T extends HandlersMap> {
   }
 
   /**
+   * Restarts all running forks
+   */
+  public restart() {
+    Object.keys(this.runningHandlers)
+      .forEach(name => this.getRunningForks(name)
+        .forEach(fork => fork.restart()
+      )
+    )
+  }
+
+  /**
    * Get initializator handler
    */
   public get run(): { [K in keyof T]: (...args: ArgumentTypes<T[K]>) => Promise<ForkHandler<Await<ReturnType<T[K]>>>> } {
@@ -52,7 +63,7 @@ export class Cluster<T extends HandlersMap> {
   /**
    * Get all runnign forks by name
    */
-  public getRunningForks(name: string) {
+  public getRunningForks(name: string): ForkHandler<any>[] {
     return this.runningHandlers[name] || []
   }
 

@@ -35,6 +35,11 @@ class Cluster {
         Cluster.alreadyInitialized = true;
         return new Cluster(initializators);
     }
+    restart() {
+        Object.keys(this.runningHandlers)
+            .forEach(name => this.getRunningForks(name)
+            .forEach(fork => fork.restart()));
+    }
     get run() {
         if (cluster.isMaster) {
             return new Proxy(this, {

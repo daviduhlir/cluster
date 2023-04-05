@@ -11,3 +11,6 @@ MasterHandler.Initialize(async () => {
   const handler = await workers.run.worker()
   await handler.tx.sayHello()
 })
+
+
+setTimeout(() => workers.restart(), 2000)
