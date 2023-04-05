@@ -8,7 +8,7 @@ import { ForkHandler, WORKER_DIED } from './ForkHandler'
  */
 export class Cluster<T extends HandlersMap> {
   protected static alreadyInitialized: boolean = false
-  protected runningHandlers: {[name: string]: ForkHandler<any>[]} = {}
+  protected runningHandlers: { [name: string]: ForkHandler<any>[] } = {}
 
   protected systemReceiverLayer: IpcMethodHandler = null
   protected receiverLayer: IpcMethodHandler = null
@@ -29,7 +29,7 @@ export class Cluster<T extends HandlersMap> {
    */
   protected constructor(protected readonly initializators: T) {
     if (cluster.isWorker) {
-      this.systemReceiverLayer = new IpcMethodHandler(['cluster-internal'] ,{
+      this.systemReceiverLayer = new IpcMethodHandler(['cluster-internal'], {
         INITIALIZE_WORKER: this.initializeWorker,
         PING: this.ping,
       })
@@ -40,11 +40,7 @@ export class Cluster<T extends HandlersMap> {
    * Restarts all running forks
    */
   public restart() {
-    Object.keys(this.runningHandlers)
-      .forEach(name => this.getRunningForks(name)
-        .forEach(fork => fork.restart()
-      )
-    )
+    Object.keys(this.runningHandlers).forEach(name => this.getRunningForks(name).forEach(fork => fork.restart()))
   }
 
   /**
@@ -53,7 +49,10 @@ export class Cluster<T extends HandlersMap> {
   public get run(): { [K in keyof T]: (...args: ArgumentTypes<T[K]>) => Promise<ForkHandler<Await<ReturnType<T[K]>>>> } {
     if (cluster.isMaster) {
       return new Proxy(this as any, {
-        get: (target, name, receiver) => async (...args) => this.startFork(name.toString(), args),
+        get:
+          (target, name, receiver) =>
+          async (...args) =>
+            this.startFork(name.toString(), args),
       })
     } else {
       throw new Error('Starting of forks outside of master process is not allowed')

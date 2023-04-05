@@ -38,11 +38,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
 
   protected internalIpcTx: IpcMethodHandler = new IpcMethodHandler(['cluster-internal'])
 
-  constructor(
-    public readonly name: string,
-    protected readonly args: any[],
-    public readonly config: ForkConfig = forkDefaultConfig,
-  ) {
+  constructor(public readonly name: string, protected readonly args: any[], public readonly config: ForkConfig = forkDefaultConfig) {
     super(['cluster-fork-user'])
     this.fork()
   }
@@ -109,7 +105,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
   /**
    * Set process
    */
-   public set process(process: ProcessType) {
+  public set process(process: ProcessType) {
     this.emit(PROCESS_CHANGED, {
       oldProcess: this.processHandler,
       newProcess: process,

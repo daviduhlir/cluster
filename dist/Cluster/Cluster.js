@@ -36,9 +36,7 @@ class Cluster {
         return new Cluster(initializators);
     }
     restart() {
-        Object.keys(this.runningHandlers)
-            .forEach(name => this.getRunningForks(name)
-            .forEach(fork => fork.restart()));
+        Object.keys(this.runningHandlers).forEach(name => this.getRunningForks(name).forEach(fork => fork.restart()));
     }
     get run() {
         if (cluster.isMaster) {

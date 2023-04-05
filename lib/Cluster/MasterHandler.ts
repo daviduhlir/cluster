@@ -29,13 +29,15 @@ export class MasterHandler<T extends Object> {
   protected async initialize() {
     if (cluster.isMaster) {
       this.receiver = await this.receiverFactory()
-      this.methodHandler = new IpcMethodHandler(['cluster-master-user'], this.receiver || {} as any)
+      this.methodHandler = new IpcMethodHandler(['cluster-master-user'], this.receiver || ({} as any))
 
       // just only for calling from master to master
       this.receiverProxyWraper = new Proxy({} as any, {
-        get: (target, propKey, receiver) => async (...args) => this.receiver[propKey](...args),
+        get:
+          (target, propKey, receiver) =>
+          async (...args) =>
+            this.receiver[propKey](...args),
       })
-
     } else {
       this.methodHandler = new IpcMethodHandler(['cluster-master-user'])
     }
