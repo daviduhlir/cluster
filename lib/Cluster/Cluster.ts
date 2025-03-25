@@ -1,7 +1,7 @@
 import { IpcMethodHandler } from '@david.uhlir/ipc-method'
 import * as cluster from 'cluster'
 import { HandlersMap, ArgumentTypes, Await } from '../utils/types'
-import { ForkHandler, WORKER_DIED } from './ForkHandler'
+import { ForkConfig, forkDefaultConfig, ForkHandler, WORKER_DIED } from './ForkHandler'
 
 /**
  * Main cluster initializator
@@ -12,11 +12,13 @@ export class Cluster<T extends HandlersMap> {
 
   protected systemReceiverLayer: IpcMethodHandler = null
   protected receiverLayer: IpcMethodHandler = null
+  protected static config: ForkConfig = forkDefaultConfig
 
-  public static Initialize<T extends HandlersMap>(initializators: T): Cluster<T> {
+  public static Initialize<T extends HandlersMap>(initializators: T, forkConfig?: ForkConfig): Cluster<T> {
     if (Cluster.alreadyInitialized) {
       throw new Error(`Cluster can be initialized only once.`)
     }
+    Cluster.config = forkConfig || forkDefaultConfig
     Cluster.alreadyInitialized = true
     return new Cluster(initializators)
   }
@@ -52,7 +54,7 @@ export class Cluster<T extends HandlersMap> {
         get:
           (target, name, receiver) =>
           async (...args) =>
-            this.startFork(name.toString(), args),
+            this.startFork(name.toString(), args, Cluster.config),
       })
     } else {
       throw new Error('Starting of forks outside of master process is not allowed')
@@ -76,8 +78,8 @@ export class Cluster<T extends HandlersMap> {
   /**
    * Starts a fork
    */
-  protected async startFork(name: string, args: any[]): Promise<ForkHandler<any>> {
-    const fork = new ForkHandler(name, args)
+  protected async startFork(name: string, args: any[], config?: ForkConfig): Promise<ForkHandler<any>> {
+    const fork = new ForkHandler(name, args, config)
     await fork.init()
     this.runningHandlers[name] = [...(this.runningHandlers[name] || []), fork]
 

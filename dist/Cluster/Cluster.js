@@ -28,10 +28,11 @@ class Cluster {
             });
         }
     }
-    static Initialize(initializators) {
+    static Initialize(initializators, forkConfig) {
         if (Cluster.alreadyInitialized) {
             throw new Error(`Cluster can be initialized only once.`);
         }
+        Cluster.config = forkConfig || ForkHandler_1.forkDefaultConfig;
         Cluster.alreadyInitialized = true;
         return new Cluster(initializators);
     }
@@ -41,7 +42,7 @@ class Cluster {
     get run() {
         if (cluster.isMaster) {
             return new Proxy(this, {
-                get: (target, name, receiver) => async (...args) => this.startFork(name.toString(), args),
+                get: (target, name, receiver) => async (...args) => this.startFork(name.toString(), args, Cluster.config),
             });
         }
         else {
@@ -54,8 +55,8 @@ class Cluster {
     removeRunningFork(fork) {
         this.runningHandlers[fork.name] = (this.runningHandlers[fork.name] || []).filter(i => i !== fork);
     }
-    async startFork(name, args) {
-        const fork = new ForkHandler_1.ForkHandler(name, args);
+    async startFork(name, args, config) {
+        const fork = new ForkHandler_1.ForkHandler(name, args, config);
         await fork.init();
         this.runningHandlers[name] = [...(this.runningHandlers[name] || []), fork];
         fork.addListener(ForkHandler_1.WORKER_DIED, this.removeRunningFork);
@@ -64,4 +65,5 @@ class Cluster {
 }
 exports.Cluster = Cluster;
 Cluster.alreadyInitialized = false;
+Cluster.config = ForkHandler_1.forkDefaultConfig;
 //# sourceMappingURL=Cluster.js.map
