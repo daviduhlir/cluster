@@ -9,7 +9,6 @@
     "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "suppressImplicitAnyIndexErrors": true,
     "outDir": "./build",
     "sourceMap": true,
   },

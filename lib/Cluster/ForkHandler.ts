@@ -47,7 +47,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
    * Initialize worker.
    */
   public async init() {
-    if (cluster.isMaster) {
+    if (!cluster.default.isWorker) {
       if (!this.isLiving) {
         throw new Error(`You can't call init on worker, that is no longer living.`)
       }
@@ -124,7 +124,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
    * Get all avaliable processes
    */
   protected get processes(): (NodeJS.Process | cluster.Worker)[] {
-    if (cluster.isWorker) {
+    if (cluster.default.isWorker) {
       throw new Error('Fork handler is designed only for master process.')
     } else {
       return [this.processHandler]
@@ -138,7 +138,7 @@ export class ForkHandler<T> extends IpcMethodHandler {
     if (this.process) {
       this.process.removeListener('exit', this.handleStop)
     }
-    this.process = cluster.fork()
+    this.process = cluster.default.fork()
     this.resetPing()
     this.process.addListener('exit', this.handleStop)
   }

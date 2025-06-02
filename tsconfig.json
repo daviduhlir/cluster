@@ -9,9 +9,9 @@
     "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "suppressImplicitAnyIndexErrors": true,
     "outDir": "./dist",
     "sourceMap": true,
+    "esModuleInterop": true
   },
   "files": [
     "./lib/index.ts"

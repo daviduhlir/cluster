@@ -27,7 +27,7 @@ export class MasterHandler<T extends Object> {
   }
 
   protected async initialize() {
-    if (cluster.isMaster) {
+    if (!cluster.default.isWorker) {
       this.receiver = await this.receiverFactory()
       this.methodHandler = new IpcMethodHandler(['cluster-master-user'], this.receiver || ({} as any))
 
@@ -47,7 +47,7 @@ export class MasterHandler<T extends Object> {
    * Call something to master process.
    */
   public get tx(): AsObject<T> {
-    if (!cluster.isMaster) {
+    if (cluster.default.isWorker) {
       return this.methodHandler.as<T>()
     }
     return this.receiverProxyWraper

@@ -30,7 +30,7 @@ export class Cluster<T extends HandlersMap> {
    * @param handlers this is handler on master process, which can be called from forks.
    */
   protected constructor(protected readonly initializators: T) {
-    if (cluster.isWorker) {
+    if (cluster.default.isWorker) {
       this.systemReceiverLayer = new IpcMethodHandler(['cluster-internal'], {
         INITIALIZE_WORKER: this.initializeWorker,
         PING: this.ping,
@@ -49,7 +49,7 @@ export class Cluster<T extends HandlersMap> {
    * Get initializator handler
    */
   public get run(): { [K in keyof T]: (...args: ArgumentTypes<T[K]>) => Promise<ForkHandler<Await<ReturnType<T[K]>>>> } {
-    if (cluster.isMaster) {
+    if (!cluster.default.isWorker) {
       return new Proxy(this as any, {
         get:
           (target, name, receiver) =>
