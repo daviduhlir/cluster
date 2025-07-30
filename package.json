@@ -24,7 +24,7 @@
   "author": "David Uhlíř",
   "license": "ISC",
   "dependencies": {
-    "@david.uhlir/ipc-method": "^1.0.19"
+    "@david.uhlir/ipc-method": "^1.0.20"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
