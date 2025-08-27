@@ -4,6 +4,7 @@ import { Worker } from './Workers/Worker'
 /**
  * Defined cluster
  */
+Cluster.ipcMessageSizeLimit = 10 * 1024 * 1024 // 10MB
 export const workers = Cluster.Initialize({
   main: async (name: string) => new Worker(name),
 })

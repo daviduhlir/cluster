@@ -15,6 +15,7 @@ export interface ForkConfig {
   PING_INTERVAL?: number
   PING_MAX_TIME?: number
   PING_RESTART_ON_TIMEOUT?: boolean
+  MESSAGE_SIZE_LIMIT?: number
 }
 
 export const forkDefaultConfig = {
@@ -36,10 +37,11 @@ export class ForkHandler<T> extends IpcMethodHandler {
   protected pingInterval: any = null
   protected processHandler: ProcessType
 
-  protected internalIpcTx: IpcMethodHandler = new IpcMethodHandler(['cluster-internal'])
+  protected internalIpcTx: IpcMethodHandler
 
   constructor(public readonly name: string, protected readonly args: any[], public readonly config: ForkConfig = forkDefaultConfig) {
     super(['cluster-fork-user'])
+    this.internalIpcTx = new IpcMethodHandler(['cluster-internal'], {}, { messageSizeLimit: config.MESSAGE_SIZE_LIMIT })
     this.fork()
   }
 

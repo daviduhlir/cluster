@@ -10,6 +10,8 @@ export class Cluster<T extends HandlersMap> {
   protected static alreadyInitialized: boolean = false
   protected runningHandlers: { [name: string]: ForkHandler<any>[] } = {}
 
+  public static ipcMessageSizeLimit = 1024 * 1024 * 10 // 10MB
+
   protected systemReceiverLayer: IpcMethodHandler = null
   protected receiverLayer: IpcMethodHandler = null
   protected static config: ForkConfig = forkDefaultConfig
@@ -31,10 +33,14 @@ export class Cluster<T extends HandlersMap> {
    */
   protected constructor(protected readonly initializators: T) {
     if (cluster.default.isWorker) {
-      this.systemReceiverLayer = new IpcMethodHandler(['cluster-internal'], {
-        INITIALIZE_WORKER: this.initializeWorker,
-        PING: this.ping,
-      })
+      this.systemReceiverLayer = new IpcMethodHandler(
+        ['cluster-internal'],
+        {
+          INITIALIZE_WORKER: this.initializeWorker,
+          PING: this.ping,
+        },
+        { messageSizeLimit: Cluster.ipcMessageSizeLimit },
+      )
     }
   }
 
@@ -79,7 +85,7 @@ export class Cluster<T extends HandlersMap> {
    * Starts a fork
    */
   protected async startFork(name: string, args: any[], config?: ForkConfig): Promise<ForkHandler<any>> {
-    const fork = new ForkHandler(name, args, config)
+    const fork = new ForkHandler(name, args, { MESSAGE_SIZE_LIMIT: Cluster.ipcMessageSizeLimit, ...config })
     await fork.init()
     this.runningHandlers[name] = [...(this.runningHandlers[name] || []), fork]
 
