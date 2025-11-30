@@ -32,7 +32,7 @@ export class Cluster<T extends HandlersMap> {
    * @param handlers this is handler on master process, which can be called from forks.
    */
   protected constructor(protected readonly initializators: T) {
-    if (cluster.default.isWorker) {
+    if (!cluster.default.isWorker) {
       this.systemReceiverLayer = new IpcMethodHandler(
         ['cluster-internal'],
         {
